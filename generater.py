@@ -15,6 +15,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__),'lib'))
 
 from create import *
 from get import *
+from create_file_or_folder import *
 
 def analysis_xml(path):
 	tree = ET.parse(path)
@@ -83,7 +84,7 @@ if __name__ == "__main__":
 	print(odata_types)
 	
 	data = {}	
-	collection_path = {}	
+	collection_path = []	
 	
 	if bool(dir_path):
 		print("\n################################################################################")
@@ -115,17 +116,19 @@ if __name__ == "__main__":
 
 				attr_properties, attr_navigation_properties, collection_path = get_all_property(os.path.join(RESOURCE_XML_PATH, temp_odata_type+"_v1.xml"), temp_odata_type)
 				
-				redfish_path, collection_path[temp_odata_type] = get_odata_id(collection_path[temp_odata_type])
+				redfish_path, collection_path[0] = get_odata_id(collection_path[0])
 
-				data = create_content(redfish_data_info['child'], collection_path[temp_odata_type], attr_properties, attr_navigation_properties)
+				data = create_content(redfish_data_info['child'], collection_path[0], attr_properties, attr_navigation_properties)
 
 				create_index(redfish_path, data)
 				
 			attr_properties, attr_navigation_properties, collection_path = get_all_property(os.path.join(RESOURCE_XML_PATH, odata_type+"_v1.xml"), odata_type)
 		
-	
-			redfish_path, collection_path[odata_type] = get_odata_id(collection_path[odata_type])	
-			data = create_content(redfish_data_info, collection_path[odata_type], attr_properties,attr_navigation_properties)
+			print("@@@@",attr_properties)
+			print("@@@@",attr_navigation_properties)		
+			print("@@@@",collection_path)	
+			redfish_path, collection_path[0] = get_odata_id(collection_path[0])	
+			data = create_content(redfish_data_info, collection_path[0], attr_properties,attr_navigation_properties)
 				
 			create_index(redfish_path, data)
 			

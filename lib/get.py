@@ -1,10 +1,12 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 import os, json
+import sys
 
-from create import *
 from setting import *
 from xml.etree import ElementTree as ET
+
+from create_file_or_folder import *
 
 ENTITY_PROPERTY = ['ComplexType','EnumType']
 
@@ -15,7 +17,6 @@ def get_odata_id(path):
 	odata_id = "/"
 	for index in range(len(tags)):
 		if '{' in tags[index][:1] and '}' in tags[index][-1:]:
-			print(tags[index])
 			list_dir = os.listdir(os.path.join(REDFISH_DATA,tags[index-1]))
 
 			for dirname in list_dir:
@@ -40,7 +41,8 @@ def get_property(child):
 	return child.tag.split('}')[-1]
 
 def get_reference_resource_and_attr_name(_property, attr_name):
-	if 'Collection' in _property[attr_name]:
+	
+	if 'Collection(' in _property[attr_name]:
 		_type = _property[attr_name].split('(')[-1][:-1]
 	else:
 		_type = _property[attr_name]
@@ -90,13 +92,15 @@ def get_all_property(path, attr_name):
 	root = get_root(path)	
 	attr_property = {}
 	attr_navigation_property = {}
-	temp_path = {}
+	temp_path = []
 
 	begin = True
 	count = 1
+	
 	for child in root.iter():
+		# 
 		if 'String' in child.tag:
-			temp_path[attr_name] = child.text
+			temp_path.append(child.text)
 		if 'Name' in child.attrib.keys():
 			if count == 1: 
 				count = count +1
@@ -135,18 +139,13 @@ def get_entity_property(attr_name, resource_attr_name, resource_name):
 	if resource_name == resource_attr_name:
 		
 		temp['@odata.id'] = get_reference_path(resource_attr_name, resource_name)
-		
 		if temp['@odata.id'] == None:
 			pass
 		else:
-			print("temp['@odata.id']: ",temp['@odata.id'])
-			_, temp['@odata.id'] = get_odata_id(temp['@odata.id'])
-			print("temp['@odata.id']: ",temp['@odata.id'])
+			str_path, temp['@odata.id'] = get_odata_id(temp['@odata.id'])
+			create_folder(str_path)			
 		
-		return temp
-	
 	else: 
-		#temp[attr_name] = {}
 		for child in root.iter():
 			if 'ComplexType' in get_property(child) or 'EntityType' in get_property(child):
 				if begin_level_1:
@@ -171,47 +170,10 @@ def get_entity_property(attr_name, resource_attr_name, resource_name):
 			if begin_level_1:
 				_type = get_property(child)
 				if _type in REFERENCE_PROPERTY_TARGET:
-					print("### _type: ",_type)
 					temp_key, temp_value = get_reference_property(child)
 					temp[temp_key] = temp_value
 		
-	'''	
-	print("\n##################")
-	print("Temp: ", temp)
-	print("##################\n")
-	'''	
 	return temp
-
-
-def get_outside_property(path, attr_name):
-	
-	root = get_root(path)	
-	attr_complex_property = []
-
-	block = False
-	for child in root.iter():
-		_type = get_property(child)
-		if _type == "ComplexType":
-			if child.attrib['Name'] == attr_name:
-				block = True
-		else:
-			if block:
-				_type = get_property(child)
-				if _type == "Property":
-					attr_complex_property.append( child.attrib)
-				elif _type not in ENTITY_PROPERTY:
-					pass
-				else :
-					block = False
-
-	return attr_complex_property
-
-def get_info(attr_property):
-	print("")
-	print(attr_property)
-
-	data = {}
-	
 
 if __name__ == "__main__":
 	attr_property, attr_navigation_property = get_all_property(os.path.join(RESOURCE_XML_PATH,"Resource_v1.xml"),"Status")
