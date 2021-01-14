@@ -14,68 +14,60 @@ def create_dir(path):
 		os.mkdir(path)
 
 def create_property(data, _properties):
+	
 	for attr_name in _properties:
-		resource_name, property_name = _properties[attr_name].split('.')[0], _properties[attr_name].split('.')[-1]
-		print(resource_name, property_name)
+		resource_name, resource_attr_name = _properties[attr_name].split('.')[0], _properties[attr_name].split('.')[-1]
+		print(resource_name, resource_attr_name)
 		
 		# Property
 		if resource_name == "Edm":
-			print("#### data[attr_name]: ",attr_name)
 			data[attr_name] = ""
 		
 		# Reference
 		elif resource_name != "Edm" :
-			attr_property = get_inside_property(data, attr_name, resource_name)
-			
-			_property = {}
-			print("### attr_name: ", attr_name,"(",__file__,")")
-			#for C_property in attr_property:
-			#	_property[C_property['Name']] = ""
-			data[attr_name] = _property
+			attr_property = get_entity_property(attr_name, resource_attr_name, resource_name)
+			data[attr_name] = attr_property
 		
 		else:
 			print("Error: Cann't identify the type.") 
 	
 	print("\n#########")
 	print(data)
-	print("\n#########")
+	print("#########")
 		
 	return data
 
-def create_navigation_property(data, _navigation_properties, paths):
+def create_navigation_property(data, _navigation_properties):
 	print("### _navigation :", _navigation_properties)
-	print("### paths :", paths)
+	
 	for attr_name in _navigation_properties:
+		print(attr_name)
+		resource_name, resource_attr_name = get_reference_resource_and_attr_name(_navigation_properties, attr_name)
+		attr_property = get_entity_property(attr_name, resource_attr_name, resource_name)
 		if 'Collection' in _navigation_properties[attr_name]:
-			 temp_list = []
-			 _type = _navigation_properties[attr_name].split('(')[-1][:-1]
-			 resource_name, property_name = _type.split('.')[0], _type.split('.')[-1]
+			temp = []
+			temp.append(attr_property)
+			data[attr_name] = temp
 		else:
-			resource_name, property_name = _navigation_properties[attr_name].split('.')[0], _navigation_properties[attr_name].split('.')[-1]
-		print("\n#########:",resource_name, data['Id'], property_name)
-		data[attr_name] = get_inside_property(data, property_name, resource_name)
-
-		print("\n#########")
-		print(data)
-		print("#########\n")
-		break
-			
-			
+			data[attr_name] = attr_property
+					
 	return data
 
-def create_content(response, odata_id, _properties, _navigation_properties, entities = None):
+def create_content(response, odata_id, _properties, _navigation_properties):
 	data = collections.OrderedDict()
 	data["@odata.type"] = response['@odata_type']
 	data["Id"] = response['@odata_type'].split('.')[0][1:]
 	data["Name"] = ""
 	data["Description"] = ""
 	data = create_property(data, _properties)
-	#data = create_navigation_property(data, _navigation_properties, odata_id)
-
-		
+	data = create_navigation_property(data, _navigation_properties)
 	data["@odata.id"] = odata_id
 	data[COPYRIGHT] = COPYRIGHT_CONTENT
-	 
+	
+	#print("\n####### Final data ########")
+	#print(data)
+
+ 
 	return data
 
 def create_conllection(response):

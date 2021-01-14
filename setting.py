@@ -15,6 +15,7 @@ RESOURCE_XML_PATH = "./resource"
 SPECIAL_RESOURCE = ['Settings','RedfishExtensions']
 ALL_COLLECTIONS = ['AccountService','Chassis','EventService','Manager','SessionService','Systems','TaskService']
 RESOURCE_DOMAIN = "http://redfish.dmtf.org/schemas/v1/"
+REFERENCE_PROPERTY_TARGET = ['NavigationProperty','Property']
 
 ########### Redfish data  ###############
 COPYRIGHT = "@Redfish.Copyright"
