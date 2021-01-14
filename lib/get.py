@@ -7,6 +7,30 @@ from setting import *
 from xml.etree import ElementTree as ET
 
 ENTITY_PROPERTY = ['ComplexType','EnumType']
+
+def get_odata_id(path):
+	
+	tags = path.split('/')
+	str_path = REDFISH_DATA
+	odata_id = "/"
+	for index in range(len(tags)):
+		if '{' in tags[index][:1] and '}' in tags[index][-1:]:
+			print(tags[index])
+			list_dir = os.listdir(os.path.join(REDFISH_DATA,tags[index-1]))
+
+			for dirname in list_dir:
+				if dirname != INFO_FILENAME:
+					tags[index] = dirname
+				else:
+					print("This is index.json. ")
+					pass	
+		if tags[index] != 'redfish' and tags[index] != 'v1':
+			str_path = os.path.join(str_path, tags[index])
+		odata_id = os.path.join(odata_id, tags[index])
+	
+	print( odata_id,"    +    ", str_path)			
+	return str_path, odata_id
+
 def get_root(path):
 	tree = ET.parse(path)
 	root = tree.getroot()
@@ -37,29 +61,29 @@ def get_reference_property(child):
 	attr_name = ""
 
 	attr_name = child.attrib['Name']
-	print("Attr_name: ", attr_name)
-
-	print()
 
 	if 'Oem' == attr_name:
 		temp = ""
 	elif 'Edm' == child.attrib['Type'].split('.')[0]:
-		print("3")
 		temp = ""
 	elif 'Collection' in child.attrib['Type'].split('('):
-		print("1")
 		resource_name, resource_attr_name = get_reference_resource_and_attr_name(child.attrib, 'Type')
-
-		#resource_name, resource_attr_name = reference.split('.')
-		temp = list(get_entity_property(attr_name, resource_attr_name, resource_name))
+		dict_add_list = []
+		dict_add_list.append(get_entity_property(attr_name, resource_attr_name, resource_name))
+		temp = dict_add_list
 	else:
-		print("2")
 		reference = child.attrib['Type'].split('.')
 		resource_name, resource_attr_name = reference[0], reference[-1]
 		temp = get_entity_property(attr_name, resource_attr_name, resource_name)
-		print("### temp 54: ",temp)
+	
 	return  attr_name, temp
 
+# There is one question:
+# - Use the "count"
+'''
+- count = 2 is a start point 
+- count = 3 is special case
+'''
 
 def get_all_property(path, attr_name):
 	
@@ -82,6 +106,7 @@ def get_all_property(path, attr_name):
 						begin = True
 						count = count +1
 					else:
+						print("111")
 						begin = False
 				else:	
 					if begin:
@@ -96,24 +121,32 @@ def get_all_property(path, attr_name):
 def get_entity_property(attr_name, resource_attr_name, resource_name):
 	path = os.path.join(RESOURCE_XML_PATH, resource_name+'_v1.xml')
 	root = get_root(path)
-	
+	'''
 	print("\n######### Info ",__file__, "############")
 	print("attr_name: ", attr_name)
 	print("resource_attr_name: ", resource_attr_name)
 	print("resource_name: ", resource_name)
 	print("path: ", path)
 	print("#######################################\n")	
-	
+	'''	
 	begin_level_1 = False
 	temp = {}	
 	
 	if resource_name == resource_attr_name:
 		
 		temp['@odata.id'] = get_reference_path(resource_attr_name, resource_name)
+		
+		if temp['@odata.id'] == None:
+			pass
+		else:
+			print("temp['@odata.id']: ",temp['@odata.id'])
+			_, temp['@odata.id'] = get_odata_id(temp['@odata.id'])
+			print("temp['@odata.id']: ",temp['@odata.id'])
+		
 		return temp
 	
 	else: 
-		temp[attr_name] = {}
+		#temp[attr_name] = {}
 		for child in root.iter():
 			if 'ComplexType' in get_property(child) or 'EntityType' in get_property(child):
 				if begin_level_1:
@@ -126,7 +159,7 @@ def get_entity_property(attr_name, resource_attr_name, resource_name):
 					if attr_name == child.attrib['Name']:
 						begin_level_1 = True
 				else:
-					temp[attr_name] = ""
+					temp = ""
 
 			elif 'EnumType' in get_property(child):
 				if resource_attr_name == child.attrib['Name']:
@@ -140,7 +173,7 @@ def get_entity_property(attr_name, resource_attr_name, resource_name):
 				if _type in REFERENCE_PROPERTY_TARGET:
 					print("### _type: ",_type)
 					temp_key, temp_value = get_reference_property(child)
-					temp[attr_name][temp_key] = temp_value
+					temp[temp_key] = temp_value
 		
 	'''	
 	print("\n##################")

@@ -115,24 +115,17 @@ if __name__ == "__main__":
 
 				attr_properties, attr_navigation_properties, collection_path = get_all_property(os.path.join(RESOURCE_XML_PATH, temp_odata_type+"_v1.xml"), temp_odata_type)
 				
-				print(collection_path)
+				redfish_path, collection_path[temp_odata_type] = get_odata_id(collection_path[temp_odata_type])
 
 				data = create_content(redfish_data_info['child'], collection_path[temp_odata_type], attr_properties, attr_navigation_properties)
-				redfish_path = data['@odata.id'].split('v1')[-1][1:]
-				print(data['Members'])	
-				
 
-				dir_path = os.path.join(REDFISH_DATA,redfish_path)
-				create_index(dir_path, data)
-				
+				create_index(redfish_path, data)
 				
 			attr_properties, attr_navigation_properties, collection_path = get_all_property(os.path.join(RESOURCE_XML_PATH, odata_type+"_v1.xml"), odata_type)
-
-			if odata_type in entities.keys():
-				collection_path[odata_type] = entities[odata_type]	
 		
+	
+			redfish_path, collection_path[odata_type] = get_odata_id(collection_path[odata_type])	
 			data = create_content(redfish_data_info, collection_path[odata_type], attr_properties,attr_navigation_properties)
-			redfish_path = data['@odata.id'].split('v1')[-1]
-			
+				
 			create_index(redfish_path, data)
 			

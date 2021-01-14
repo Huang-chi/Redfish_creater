@@ -17,7 +17,6 @@ def create_property(data, _properties):
 	
 	for attr_name in _properties:
 		resource_name, resource_attr_name = _properties[attr_name].split('.')[0], _properties[attr_name].split('.')[-1]
-		print(resource_name, resource_attr_name)
 		
 		# Property
 		if resource_name == "Edm":
@@ -30,18 +29,17 @@ def create_property(data, _properties):
 		
 		else:
 			print("Error: Cann't identify the type.") 
-	
+	'''	
 	print("\n#########")
 	print(data)
 	print("#########")
-		
+	'''	
 	return data
 
 def create_navigation_property(data, _navigation_properties):
 	print("### _navigation :", _navigation_properties)
 	
 	for attr_name in _navigation_properties:
-		print(attr_name)
 		resource_name, resource_attr_name = get_reference_resource_and_attr_name(_navigation_properties, attr_name)
 		attr_property = get_entity_property(attr_name, resource_attr_name, resource_name)
 		if 'Collection' in _navigation_properties[attr_name]:
@@ -67,7 +65,6 @@ def create_content(response, odata_id, _properties, _navigation_properties):
 	#print("\n####### Final data ########")
 	#print(data)
 
- 
 	return data
 
 def create_conllection(response):
