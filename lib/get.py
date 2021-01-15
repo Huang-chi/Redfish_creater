@@ -10,6 +10,10 @@ from create_file_or_folder import *
 
 ENTITY_PROPERTY = ['ComplexType','EnumType']
 
+def get_entry(path):
+	with open(path, "r") as f:
+		return json.load(f)
+
 def get_odata_id(path):
 	
 	tags = path.split('/')
@@ -23,13 +27,13 @@ def get_odata_id(path):
 				if dirname != INFO_FILENAME:
 					tags[index] = dirname
 				else:
-					print("This is index.json. ")
-					pass	
+					pass
+	
 		if tags[index] != 'redfish' and tags[index] != 'v1':
 			str_path = os.path.join(str_path, tags[index])
 		odata_id = os.path.join(odata_id, tags[index])
 	
-	print( odata_id,"    +    ", str_path)			
+	#print( odata_id,"    +    ", str_path)			
 	return str_path, odata_id
 
 def get_root(path):
@@ -110,7 +114,6 @@ def get_all_property(path, attr_name):
 						begin = True
 						count = count +1
 					else:
-						print("111")
 						begin = False
 				else:	
 					if begin:
@@ -123,16 +126,18 @@ def get_all_property(path, attr_name):
 	return attr_property, attr_navigation_property, temp_path	
 
 def get_entity_property(attr_name, resource_attr_name, resource_name):
+	
 	path = os.path.join(RESOURCE_XML_PATH, resource_name+'_v1.xml')
-	root = get_root(path)
-	'''
+	'''	
 	print("\n######### Info ",__file__, "############")
 	print("attr_name: ", attr_name)
 	print("resource_attr_name: ", resource_attr_name)
 	print("resource_name: ", resource_name)
 	print("path: ", path)
 	print("#######################################\n")	
-	'''	
+	'''
+	root = get_root(path)
+	
 	begin_level_1 = False
 	temp = {}	
 	
@@ -158,12 +163,11 @@ def get_entity_property(attr_name, resource_attr_name, resource_name):
 					if attr_name == child.attrib['Name']:
 						begin_level_1 = True
 				else:
-					temp = ""
+					return ""
 
 			elif 'EnumType' in get_property(child):
 				if resource_attr_name == child.attrib['Name']:
-					temp = ""
-					break
+					return ""
 				else:
 					pass
 

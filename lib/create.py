@@ -79,10 +79,4 @@ def create_entity(path):
 			create_folder(Collection)			
 	return entities
 
-def get_entry(path):
-	response = ""
-	with open(path, "r") as f:
-		response= json.load(f)
-
-	return response
 

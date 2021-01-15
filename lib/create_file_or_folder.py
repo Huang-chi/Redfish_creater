@@ -6,7 +6,6 @@ from setting import *
 def create_index(path, data):
 	with open(os.path.join(path, INFO_FILENAME), 'w', newline='') as f:
 		json.dump(data, f, indent = 4)
-		#f = json.dumps(data, indent=4)
 
 def create_folder(path):
 	if not os.path.isdir(path):

@@ -100,7 +100,7 @@ if __name__ == "__main__":
 	print("\n################################################################################")
 	print("Get data entity ... \n")
 	entities = create_entity(CONFIG_PATH)	
-	print(entities)
+	#print(entities)
 
 	print("\n################################################################################")
 	print("Get property of resource ... \n")
@@ -109,26 +109,19 @@ if __name__ == "__main__":
 		for odata_type in odata_types:
 			redfish_data_info = responses[odata_type]
 			establish_level_number = 1
- 
 			
 			if 'child' in redfish_data_info.keys():
 				temp_odata_type = redfish_data_info['child']['@odata_type'][1:].split('.')[0]
-
 				attr_properties, attr_navigation_properties, collection_path = get_all_property(os.path.join(RESOURCE_XML_PATH, temp_odata_type+"_v1.xml"), temp_odata_type)
-				
 				redfish_path, collection_path[0] = get_odata_id(collection_path[0])
-
 				data = create_content(redfish_data_info['child'], collection_path[0], attr_properties, attr_navigation_properties)
 
 				create_index(redfish_path, data)
 				
 			attr_properties, attr_navigation_properties, collection_path = get_all_property(os.path.join(RESOURCE_XML_PATH, odata_type+"_v1.xml"), odata_type)
-		
-			print("@@@@",attr_properties)
-			print("@@@@",attr_navigation_properties)		
-			print("@@@@",collection_path)	
 			redfish_path, collection_path[0] = get_odata_id(collection_path[0])	
 			data = create_content(redfish_data_info, collection_path[0], attr_properties,attr_navigation_properties)
 				
 			create_index(redfish_path, data)
+	print("\n################################################################################")
 			
