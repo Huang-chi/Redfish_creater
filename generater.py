@@ -85,14 +85,15 @@ if __name__ == "__main__":
 	
 	data = {}	
 	collection_path = []	
-	
-	if bool(dir_path):
+		
+	if not bool(dir_path):
 		print("\n################################################################################")
 		print("Create collection ... \n")
 		collections = create_conllection(get_entry(JSON_PATH))
-		#print(collections)
+		print(collections)
 	
 	print("\n################################################################################")
+		
 	print("Get resource uri ... \n")
 	responses = analysis_xml(XML_PATH)
 	#setup_install_resource(responses)
@@ -100,11 +101,11 @@ if __name__ == "__main__":
 	print("\n################################################################################")
 	print("Get data entity ... \n")
 	entities = create_entity(CONFIG_PATH)	
-	#print(entities)
+	print(entities)
 
 	print("\n################################################################################")
 	print("Get property of resource ... \n")
-
+	
 	if bool(odata_types):
 		for odata_type in odata_types:
 			redfish_data_info = responses[odata_type]
@@ -123,5 +124,6 @@ if __name__ == "__main__":
 			data = create_content(redfish_data_info, collection_path[0], attr_properties,attr_navigation_properties)
 				
 			create_index(redfish_path, data)
+		
 	print("\n################################################################################")
-			
+		

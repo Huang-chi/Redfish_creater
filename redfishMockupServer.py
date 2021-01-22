@@ -14,6 +14,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__),'lib/opensource'))
 from verify import verify_short_is_exist
 from RfMockupModule import RfMockupServer
 
+
 # Logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -107,16 +108,18 @@ def main():
             apath = myServer.mockDir
             rpath = clean_path(path, myServer.shortForm)
             fpath = os.path.join(apath, rpath, filename) if filename not in ['', None] else os.path.join(apath, rpath)
-            if os.path.isfile(fpath):
-                with open(fpath) as f:
-                    jsonData = json.load(f)
-                    f.close()
-            else:
-                jsonData = None
+
+				
+            sys.path.append(os.path.join(os.path.dirname(__file__),'lib'))
+            from get import get_json_data
+            
+            jsonData = get_json_data(fpath)
+
             protocol = '{}://'.format('https' if sslMode else 'http')
             mySSDP = RfSSDPServer(jsonData, '{}{}:{}{}'.format(protocol, hostname, port, '/redfish/v1'), hostname)
 
         logger.info("Serving Redfish mockup on port: {}".format(port))
+        print("### MySSDP: ", mySSDP)
         try:
             if mySSDP is not None:
                 t2 = threading.Thread(target=mySSDP.start)

@@ -11,7 +11,9 @@ def dict_merge(dct, merge_dct):
         :param merge_dct: dct merged into dct
         :return: None
         """
+        
         for k in merge_dct:
+            print("K: ",k)
             if (k in dct and isinstance(dct[k], dict) and isinstance(merge_dct[k], collections.Mapping)):
                 dict_merge(dct[k], merge_dct[k])
             else:

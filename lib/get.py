@@ -10,6 +10,16 @@ from create_file_or_folder import *
 
 ENTITY_PROPERTY = ['ComplexType','EnumType']
 
+def get_json_data(path):
+	if os.path.isfile(path):
+		jsonData = ""
+		with open(path) as f:
+			jsonData = json.load(f)
+			f.close()
+		return jsonData
+	else:
+		return None
+
 def get_entry(path):
 	with open(path, "r") as f:
 		return json.load(f)

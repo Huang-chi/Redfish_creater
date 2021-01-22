@@ -11,6 +11,9 @@ from setting import *
 from dict_process import *
 from path import *
 
+sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
+from get import get_json_data
+
 # Logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -29,21 +32,21 @@ class RfMockupServer(BaseHTTPRequestHandler):
             :param path:
             :param filename:
             """
+            print("######################################")
+            print("### Path: ", path, "\n### Filename: ",filename)
             apath = self.server.mockDir
             rpath = clean_path(path, self.server.shortForm)
+            print("### Apath: ",apath,"\n### Rpath: ",rpath)
+            print("######################################\n")
             return '/'.join([ apath, rpath, filename ]) if filename not in ['', None] else '/'.join([ apath, rpath ])
 
         def get_cached_link(self, path):
             """get_cached_link
             :param path:
             """
+
             if path not in self.patchedLinks:
-                if os.path.isfile(path):
-                    with open(path) as f:
-                        jsonData = json.load(f)
-                        f.close()
-                else:
-                    jsonData = None
+                jsonData = get_json_data(path)
             else:
                 jsonData = self.patchedLinks[path]
             return jsonData is not None and jsonData != '404', jsonData
@@ -284,7 +287,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
             # for GETs always dump the request headers to the console
             # there is no request data, so no need to dump that
             logger.info(("GET", self.path))
-            logger.info("   GET: Headers: {}".format(self.headers))
+            logger.info("   GET: Headers: {}xxxx".format(self.headers))
 
             print("### self.path: ",self.path)
             # construct path "mockdir/path/to/resource/<filename>"
@@ -292,6 +295,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
             fpath_xml = self.construct_path(self.path, 'index.xml')
             fpath_headers = self.construct_path(self.path, 'headers.json')
             fpath_direct = self.construct_path(self.path, '')
+
 
             success, payload = self.get_cached_link(fpath)
 
@@ -321,6 +325,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
                 # if headers exist... send information (except for chunk info)
                 # end headers here (always end headers after response)
                 self.send_response(200)
+                print("###fparg_header: ",fpath_headers)
                 if self.server.headers and (os.path.isfile(fpath_headers)):
                     self.send_header_file(fpath_headers)
                 else:
@@ -331,22 +336,15 @@ class RfMockupServer(BaseHTTPRequestHandler):
                 # Strip the @Redfish.Copyright property
                 output_data = payload
                 output_data.pop("@Redfish.Copyright", None)
-
+                
                 # Query evaluate
                 if output_data.get('Members') is not None:
                     my_members = output_data['Members']
-                    top_count = int(query_pieces.get('$top', [str(len(my_members))])[0])
-                    top_skip = int(query_pieces.get('$skip', ['0'])[0])
-
-                    my_members = my_members[top_skip:]
-                    if top_count < len(my_members):
-                        my_members = my_members[:top_count]
-                        query_out = {'$skip': top_skip + top_count, '$top': top_count}
-                        query_string = '&'.join(['{}={}'.format(k, v) for k, v in query_out.items()])
-                        output_data['Members@odata.nextLink'] = urlunparse(('', '', path, '', query_string, ''))
-                    else:
-                        pass
-
+                    
+                    '''
+                    from query import query_top_and_skip
+                    output_data = query_top_and_skip(output_data, query_pieces, my_members)
+                    '''
                     # Handle Expand Query
                     expand = query_pieces.get('$expand', [''])[0]
                     # TBD: for now ignoring levels and links (asterisk, period, tilde)
@@ -385,15 +383,22 @@ class RfMockupServer(BaseHTTPRequestHandler):
         def do_PATCH(self):
                 logger.info("   PATCH: Headers: {}".format(self.headers))
                 self.try_to_sleep('PATCH', self.path)
+                data_received = {}
 
                 if("content-length" in self.headers):
                     lenn = int(self.headers["content-length"])
+                    
                     try:
-                        data_received = json.loads(self.rfile.read(lenn).decode("utf-8"))
+                        # Cannot read the info
+
+                        data_received = json.loads(self.rfile.read(lenn).decode('utf-8'))
                     except ValueError:
                         print ('Decoding JSON has failed, sending 400')
                         data_received = None
+                    
 
+                print("Data_received: ", data_received)
+                
                 if data_received:
                     logger.info("   PATCH: Data: {}".format(data_received))
 
@@ -414,11 +419,12 @@ class RfMockupServer(BaseHTTPRequestHandler):
                             self.send_response(405)
                         else:
                             # After getting resource, merge the data.
-                            logger.info(self.headers.get('content-type'))
-                            logger.info(data_received)
-                            logger.info(payload)
+                            logger.info(("content-type:",self.headers.get('content-type')))
+                            logger.info(("Data_received: ",data_received))
+                            logger.info(("[Before] Payload: ",payload))
                             dict_merge(payload, data_received)
-                            logger.info(payload)
+                            print("\n\n")
+                            logger.info(("[After] Payload: ",payload))
                             # put into self.patchedLinks
                             self.patchedLinks[fpath] = payload
                             self.send_response(204)

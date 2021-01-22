@@ -57,12 +57,13 @@ def create_content(response, odata_id, _properties, _navigation_properties):
 def create_conllection(response):
 	Collections = []
 	Collection = ''
+	
 	for key in response.keys():
 		if "@odata.id" in response[key]:
 			URI = response[key]["@odata.id"]
 			Collection = os.path.join(REDFISH_DATA,URI.split('/')[-1])
 			print(Collection)
-			create_dir(Collection)
+			create_folder(Collection)
 			Collections.append(Collection)
 	return Collections
 
