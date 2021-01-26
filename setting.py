@@ -13,8 +13,11 @@ XML_PATH = "./test/index.xml"
 CONFIG_PATH = "./test/explorer_config.json"
 RESOURCE_XML_PATH = "./resource"
 SPECIAL_RESOURCE = ['Settings','RedfishExtensions']
-ALL_COLLECTIONS = ['AccountService','Chassis','EventService','Manager','SessionService','Systems','TaskService']
-RESOURCE_DOMAIN = "http://redfish.dmtf.org/schemas/v1/"
+ALL_COLLECTIONS = ['AccountService','Chassis','EventService','SessionService','ComputerSystem','TaskService','ManagerAccount','Role','Power','Thermal','Session','EventDestination','VirtualMedia','ManagerNetworkProtocol','LogService','LogEntry','Processor','Bios']
+
+ERROR = ['EthernetInterface','Storage','Volume','Drive','Memory','Manger','SerialInterface']
+
+resource_domain = "http://redfish.dmtf.org/schemas/v1/"
 REFERENCE_PROPERTY_TARGET = ['NavigationProperty','Property']
 
 ########### Redfish data  ###############

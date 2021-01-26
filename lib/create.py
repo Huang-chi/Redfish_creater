@@ -41,7 +41,7 @@ def create_navigation_property(data, _navigation_properties):
 					
 	return data
 
-def create_content(response, odata_id, _properties, _navigation_properties):
+def create_index_json_content(response, odata_id, _properties, _navigation_properties):
 	data = collections.OrderedDict()
 	data["@odata.type"] = response['@odata_type']
 	data["Id"] = response['@odata_type'].split('.')[0][1:]
@@ -54,7 +54,7 @@ def create_content(response, odata_id, _properties, _navigation_properties):
 	
 	return data
 
-def create_conllection(response):
+def create_collection(response):
 	Collections = []
 	Collection = ''
 	
@@ -73,11 +73,18 @@ def create_entity(path):
 	for entry in response['navlinks']:
 		if 'navlinks' in entry:
 			entry_name = entry['navlinks'][0]['target']
-			print(entry_name)
+			print("### :", entry_name)
 			Collection = os.path.join(os.path.join(REDFISH_DATA,entry['target']),entry_name)
-			print(Collection)
+			print("---->: ", Collection)
 			entities[Collection.split("/")[-2]] = Collection
 			create_folder(Collection)			
 	return entities
+
+def create_redfish_data(odata_type, redfish_data):
+	attr_properties, attr_navigation_properties, collection_path = get_all_property(os.path.join(RESOURCE_XML_PATH, odata_type+"_v1.xml"), odata_type)
+	redfish_path, collection_path[0] = get_odata_id(collection_path[0])
+
+	data = create_index_json_content(redfish_data, collection_path[0], attr_properties, attr_navigation_properties)
+	create_index_json(redfish_path, data)
 
 

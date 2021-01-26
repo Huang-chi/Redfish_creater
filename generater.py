@@ -89,41 +89,39 @@ if __name__ == "__main__":
 	if not bool(dir_path):
 		print("\n################################################################################")
 		print("Create collection ... \n")
-		collections = create_conllection(get_entry(JSON_PATH))
-		print(collections)
+		collections = create_collection(get_entry(JSON_PATH))
 	
 	print("\n################################################################################")
 		
 	print("Get resource uri ... \n")
 	responses = analysis_xml(XML_PATH)
+	if __debug__:
+		print("### Responses: ", responses)
 	#setup_install_resource(responses)
 	
 	print("\n################################################################################")
 	print("Get data entity ... \n")
 	entities = create_entity(CONFIG_PATH)	
-	print(entities)
+	if __debug__:
+		print("### Entities: ", entities)
 
 	print("\n################################################################################")
 	print("Get property of resource ... \n")
 	
 	if bool(odata_types):
 		for odata_type in odata_types:
-			redfish_data_info = responses[odata_type]
+			redfish_data = responses[odata_type]
 			establish_level_number = 1
-			
-			if 'child' in redfish_data_info.keys():
-				temp_odata_type = redfish_data_info['child']['@odata_type'][1:].split('.')[0]
-				attr_properties, attr_navigation_properties, collection_path = get_all_property(os.path.join(RESOURCE_XML_PATH, temp_odata_type+"_v1.xml"), temp_odata_type)
-				redfish_path, collection_path[0] = get_odata_id(collection_path[0])
-				data = create_content(redfish_data_info['child'], collection_path[0], attr_properties, attr_navigation_properties)
-
-				create_index(redfish_path, data)
-				
-			attr_properties, attr_navigation_properties, collection_path = get_all_property(os.path.join(RESOURCE_XML_PATH, odata_type+"_v1.xml"), odata_type)
-			redfish_path, collection_path[0] = get_odata_id(collection_path[0])	
-			data = create_content(redfish_data_info, collection_path[0], attr_properties,attr_navigation_properties)
-				
-			create_index(redfish_path, data)
+			if __debug__:
+				print("### Redfish data: ",redfish_data)			
 		
+			if 'child' in redfish_data.keys():
+				child_odata_type = redfish_data['child']['@odata_type'][1:].split('.')[0]
+				child_redfish_data = redfish_data['child']
+				create_redfish_data(child_odata_type, child_redfish_data)
+			
+			create_redfish_data(odata_type, redfish_data)
+
+			
 	print("\n################################################################################")
 		

@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 import os, json
 import sys
+import sys
 
 from setting import *
 from xml.etree import ElementTree as ET
@@ -25,25 +26,37 @@ def get_entry(path):
 		return json.load(f)
 
 def get_odata_id(path):
-	
+	if __debug__:
+		print("\n##########",__file__," ",str(sys._getframe().f_lineno),"###########")
+		print("### Path: ",path)
 	tags = path.split('/')
 	str_path = REDFISH_DATA
 	odata_id = "/"
 	for index in range(len(tags)):
-		if '{' in tags[index][:1] and '}' in tags[index][-1:]:
-			list_dir = os.listdir(os.path.join(REDFISH_DATA,tags[index-1]))
+		if __debug__:
+			print("### tag",tags[index],"  ",str_path)
 
-			for dirname in list_dir:
-				if dirname != INFO_FILENAME:
-					tags[index] = dirname
-				else:
-					pass
+		if '{' in tags[index][:1] and '}' in tags[index][-1:]:
+			try:
+				list_dir = os.listdir(str_path)
+
+				for dirname in list_dir:
+					if dirname != INFO_FILENAME:
+						tags[index] = dirname
+					else:
+						pass
+			except:
+				print("No find the path.")
 	
 		if tags[index] != 'redfish' and tags[index] != 'v1':
 			str_path = os.path.join(str_path, tags[index])
 		odata_id = os.path.join(odata_id, tags[index])
 	
-	#print( odata_id,"    +    ", str_path)			
+	if __debug__:
+		print("### odata_id: ",odata_id)
+		print("### Str_path", str_path)			
+		print("#######################################")
+	
 	return str_path, odata_id
 
 def get_root(path):
@@ -138,14 +151,14 @@ def get_all_property(path, attr_name):
 def get_entity_property(attr_name, resource_attr_name, resource_name):
 	
 	path = os.path.join(RESOURCE_XML_PATH, resource_name+'_v1.xml')
-	'''	
-	print("\n######### Info ",__file__, "############")
-	print("attr_name: ", attr_name)
-	print("resource_attr_name: ", resource_attr_name)
-	print("resource_name: ", resource_name)
-	print("path: ", path)
-	print("#######################################\n")	
-	'''
+	if __debug__:	
+		print("\n######### Info ",__file__, sys._getframe().f_lineno,"############")
+		print("attr_name: ", attr_name)
+		print("resource_attr_name: ", resource_attr_name)
+		print("resource_name: ", resource_name)
+		print("path: ", path)
+		print("#######################################\n")
+		
 	root = get_root(path)
 	
 	begin_level_1 = False
@@ -155,25 +168,25 @@ def get_entity_property(attr_name, resource_attr_name, resource_name):
 		
 		temp['@odata.id'] = get_reference_path(resource_attr_name, resource_name)
 		if temp['@odata.id'] == None:
-			pass
+			return 
 		else:
 			str_path, temp['@odata.id'] = get_odata_id(temp['@odata.id'])
-			create_folder(str_path)			
+			create_folder(str_path)	
 		
 	else: 
 		for child in root.iter():
 			if 'ComplexType' in get_property(child) or 'EntityType' in get_property(child):
 				if begin_level_1:
 					break
-
-				if 'BaseType' in child.attrib.keys():
-					if attr_name == child.attrib['Name'] and resource_name != child.attrib['BaseType'].split('.')[0]:
+				
+				if resource_attr_name == child.attrib['Name']:
+					if 'BaseType' in child.attrib.keys():
+						if resource_name != child.attrib['BaseType'].split('.')[0]:
+							begin_level_1 = True
+					elif resource_name == 'Resource':
 						begin_level_1 = True
-				elif resource_name == 'Resource':
-					if attr_name == child.attrib['Name']:
-						begin_level_1 = True
-				else:
-					return ""
+					else:
+						pass					
 
 			elif 'EnumType' in get_property(child):
 				if resource_attr_name == child.attrib['Name']:
