@@ -1,6 +1,6 @@
 import os,sys
 
-def verify_short_is_exist(logger, mockDir,shortForm):
+def verify_mockdir_is_exist(logger, mockDir,shortForm):
     print("### mockDir: ",mockDir)
     if not shortForm:
             slashRedfishDir = os.path.join(mockDir, "redfish")

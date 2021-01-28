@@ -9,10 +9,10 @@ from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse, urlunparse, parse_qs
 from setting import *
 from dict_process import *
-from path import *
+from redfish_path import *
 
 sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
-from get import get_json_data
+from redfish_get import get_json_data
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -32,12 +32,13 @@ class RfMockupServer(BaseHTTPRequestHandler):
             :param path:
             :param filename:
             """
-            print("######################################")
-            print("### Path: ", path, "\n### Filename: ",filename)
             apath = self.server.mockDir
             rpath = clean_path(path, self.server.shortForm)
-            print("### Apath: ",apath,"\n### Rpath: ",rpath)
-            print("######################################\n")
+            if __debug__:
+                print("######################################")
+                print("### Path: ", path, "\n### Filename: ",filename)
+                print("### Apath: ",apath,"\n### Rpath: ",rpath)
+                print("######################################\n")
             return '/'.join([ apath, rpath, filename ]) if filename not in ['', None] else '/'.join([ apath, rpath ])
 
         def get_cached_link(self, path):
@@ -70,8 +71,10 @@ class RfMockupServer(BaseHTTPRequestHandler):
             """send_header_file
             :param fpath:
             """
+            print("--------------------")
             with open(fpath) as headers_data:
                 d = json.load(headers_data)
+            print(d)
             if isinstance(d.get("GET"), dict):
                 for k, v in d["GET"].items():
                     if k.lower() not in dont_send:
@@ -284,12 +287,12 @@ class RfMockupServer(BaseHTTPRequestHandler):
 
         def do_GET(self):
             """do_GET"""
+
             # for GETs always dump the request headers to the console
             # there is no request data, so no need to dump that
             logger.info(("GET", self.path))
-            logger.info("   GET: Headers: {}xxxx".format(self.headers))
+            logger.info("   GET: Headers: {}".format(self.headers))
 
-            print("### self.path: ",self.path)
             # construct path "mockdir/path/to/resource/<filename>"
             fpath = self.construct_path(self.path, 'index.json')
             fpath_xml = self.construct_path(self.path, 'index.xml')
@@ -306,12 +309,16 @@ class RfMockupServer(BaseHTTPRequestHandler):
 
             # handle resource paths that don't exist for shortForm
             # '/' and '/redfish'
+
             if(self.path == '/' and self.server.shortForm):
                 self.send_response(404)
                 self.end_headers()
 
             elif(self.path in ['/redfish', '/redfish/'] and self.server.shortForm):
+                print("------------")
                 self.send_response(200)
+                print(self.server.headers)
+                print(fpath_headers)
                 if self.server.headers and (os.path.isfile(fpath_headers)):
                     self.send_header_file(fpath_headers)
                 else:
@@ -322,10 +329,11 @@ class RfMockupServer(BaseHTTPRequestHandler):
 
             # if this location exists in memory or as file
             elif(success):
+                print("-------1--1")
                 # if headers exist... send information (except for chunk info)
                 # end headers here (always end headers after response)
                 self.send_response(200)
-                print("###fparg_header: ",fpath_headers)
+                
                 if self.server.headers and (os.path.isfile(fpath_headers)):
                     self.send_header_file(fpath_headers)
                 else:
@@ -384,10 +392,10 @@ class RfMockupServer(BaseHTTPRequestHandler):
                 logger.info("   PATCH: Headers: {}".format(self.headers))
                 self.try_to_sleep('PATCH', self.path)
                 data_received = {}
-
+               
                 if("content-length" in self.headers):
                     lenn = int(self.headers["content-length"])
-                    
+                    print(lenn)
                     try:
                         # Cannot read the info
 

@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 import os, json
 import sys
-import sys
+from collections import OrderedDict
 
 from setting import *
 from xml.etree import ElementTree as ET
@@ -14,8 +14,8 @@ ENTITY_PROPERTY = ['ComplexType','EnumType']
 def get_json_data(path):
 	if os.path.isfile(path):
 		jsonData = ""
-		with open(path) as f:
-			jsonData = json.load(f)
+		with open(path, 'r', newline = '') as f:
+			jsonData = json.load(f, object_pairs_hook = OrderedDict)
 			f.close()
 		return jsonData
 	else:

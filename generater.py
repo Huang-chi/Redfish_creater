@@ -10,11 +10,11 @@ import subprocess
 from setting import *
 from xml.etree import ElementTree as ET
 
-# Private library
+# Private package
 sys.path.append(os.path.join(os.path.dirname(__file__),'lib'))
 
-from create import *
-from get import *
+from redfish_create import *
+from redfish_get import *
 from create_file_or_folder import *
 
 def analysis_xml(path):
@@ -121,7 +121,7 @@ if __name__ == "__main__":
 				create_redfish_data(child_odata_type, child_redfish_data)
 			
 			create_redfish_data(odata_type, redfish_data)
-
+	
 			
 	print("\n################################################################################")
-		
+	print("OK")	

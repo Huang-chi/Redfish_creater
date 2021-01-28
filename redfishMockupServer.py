@@ -11,16 +11,21 @@ from http.server import HTTPServer
 from setting import *
 # Private library
 sys.path.append(os.path.join(os.path.dirname(__file__),'lib/opensource'))
-from verify import verify_short_is_exist
+from redfish_verify import verify_mockdir_is_exist
 from RfMockupModule import RfMockupServer
-
+from rfSsdpServer import RfSSDPServer
+from redfish_path import clean_path
 
 # Logging
 logger = logging.getLogger(__name__)
+
 logger.setLevel(logging.DEBUG)
 ch = logging.StreamHandler(sys.stdout)
 ch.setLevel(logging.INFO)
 logger.addHandler(ch)
+
+# ssl (For target future needs to implement the secret function)
+context = ssl.create_default_context()
 
 
 def main():
@@ -44,6 +49,7 @@ def main():
                             help='place server in SSL (HTTPS) mode; requires a cert and key')
         parser.add_argument('--cert', help='the certificate for SSL')
         parser.add_argument('--key', help='the key for SSL')
+        parser.add_argument('-S', '--short-form', '--shortForm', action='store_true', help='apply short form to mockup (omit filepath /redfish/v1)')
         parser.add_argument('-P', '--ssdp', action='store_true',
                             help='make mockup SSDP discoverable')
 
@@ -57,13 +63,13 @@ def main():
         sslMode = args.ssl
         sslCert = args.cert
         sslKey = args.key
+        shortForm = args.short_form
         ssdpStart = args.ssdp
-
-        shortForm = True
 
         # check if mockup path was specified.  If not, use the built-in mockup
         if mockDirPath is None:
-            mockDirPath = 'public-rackmount1'
+            print("Add the default path.")
+            #mockDirPath = 'public-rackmount1'
             shortForm = True
 
         logger.info('Hostname: {}'.format(hostname))
@@ -76,7 +82,7 @@ def main():
         logger.info("Serving Mockup in absolute path: {}".format(mockDir))
 
         logger.info("ShortForm: {}".format(shortForm))
-        verify_short_is_exist(logger, mockDir, shortForm)
+        verify_mockdir_is_exist(logger, mockDir, shortForm)
 
         myServer = HTTPServer((hostname, port), RfMockupServer)
         
@@ -84,7 +90,7 @@ def main():
             logger.info("Using SSL with certfile: {}".format(sslCert))
             myServer.socket = ssl.wrap_socket(myServer.socket, certfile=sslCert, keyfile=sslKey, server_side=True)
 
-                # save the test flag, and real path to the mockup dir for the handler to use
+        # save the test flag, and real path to the mockup dir for the handler to use
 
         myServer.mockDir = mockDir
         # myServer.testEtagFlag = testEtagFlag
@@ -99,7 +105,6 @@ def main():
             sys.exit(2)
 
         mySSDP = None
-        print("### ssdpStart: ",ssdpStart)
         if ssdpStart:
             from gevent import monkey
             monkey.patch_all()
@@ -111,7 +116,7 @@ def main():
 
 				
             sys.path.append(os.path.join(os.path.dirname(__file__),'lib'))
-            from get import get_json_data
+            from redfish_get import get_json_data
             
             jsonData = get_json_data(fpath)
 
@@ -119,7 +124,6 @@ def main():
             mySSDP = RfSSDPServer(jsonData, '{}{}:{}{}'.format(protocol, hostname, port, '/redfish/v1'), hostname)
 
         logger.info("Serving Redfish mockup on port: {}".format(port))
-        print("### MySSDP: ", mySSDP)
         try:
             if mySSDP is not None:
                 t2 = threading.Thread(target=mySSDP.start)

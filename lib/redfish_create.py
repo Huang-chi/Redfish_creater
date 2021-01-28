@@ -2,7 +2,7 @@ import json, os
 import collections
 
 from setting import*
-from get import *
+from redfish_get import *
 from create_file_or_folder import *
 
 def create_property(data, _properties):
@@ -42,10 +42,15 @@ def create_navigation_property(data, _navigation_properties):
 	return data
 
 def create_index_json_content(response, odata_id, _properties, _navigation_properties):
+	
 	data = collections.OrderedDict()
 	data["@odata.type"] = response['@odata_type']
-	data["Id"] = response['@odata_type'].split('.')[0][1:]
 	data["Name"] = ""
+	
+	if 'Members' not in _navigation_properties:
+		data["Id"] = odata_id.split('/')[-1]
+	else:
+		data["Members@odata.count"] = 0	
 	data["Description"] = ""
 	data = create_property(data, _properties)
 	data = create_navigation_property(data, _navigation_properties)
