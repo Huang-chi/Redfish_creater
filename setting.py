@@ -25,3 +25,12 @@ COPYRIGHT = "@Redfish.Copyright"
 COPYRIGHT_CONTENT = "Copyright 2014-2019 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
 INFO_FILENAME = "index.json"
 REDFISH_DIR = "/redfish/v1"
+
+########### Component command  ###############
+COMMAND_DARWIN = "sysctl -n machdep.cpu.brand_string"
+COMMAND_CPU_LINUX_CAT = "cat /proc/cpuinfo"
+COMMAND_CPU_LINUX_LS = "lscpu"
+COMMAND_MEMORY_LINUX_CAT = "cat /proc/meminfo"
+
+
+

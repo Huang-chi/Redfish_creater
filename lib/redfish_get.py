@@ -32,11 +32,15 @@ def get_odata_id(path):
 	tags = path.split('/')
 	str_path = REDFISH_DATA
 	odata_id = "/"
-	for index in range(len(tags)):
+	print("### tags: ", tags)
+	for index in range(1,len(tags)):
 		if __debug__:
 			print("### tag",tags[index],"  ",str_path)
 
 		if '{' in tags[index][:1] and '}' in tags[index][-1:]:
+			# There are some problems:
+			# 	1. The target path is unclearly.
+			#   2. How to get the name for components. ex CPU1, CPU2 ...etc. 
 			try:
 				list_dir = os.listdir(str_path)
 
@@ -55,7 +59,7 @@ def get_odata_id(path):
 	if __debug__:
 		print("### odata_id: ",odata_id)
 		print("### Str_path", str_path)			
-		print("#######################################")
+		print("#######################################\n")
 	
 	return str_path, odata_id
 
@@ -98,7 +102,9 @@ def get_reference_property(child):
 	elif 'Collection' in child.attrib['Type'].split('('):
 		resource_name, resource_attr_name = get_reference_resource_and_attr_name(child.attrib, 'Type')
 		dict_add_list = []
-		dict_add_list.append(get_entity_property(attr_name, resource_attr_name, resource_name))
+		temp = get_entity_property(attr_name, resource_attr_name, resource_name)
+		if temp != "":
+			dict_add_list.append(temp)
 		temp = dict_add_list
 	else:
 		reference = child.attrib['Type'].split('.')
@@ -125,7 +131,6 @@ def get_all_property(path, attr_name):
 	count = 1
 	
 	for child in root.iter():
-		# 
 		if 'String' in child.tag:
 			temp_path.append(child.text)
 		if 'Name' in child.attrib.keys():
@@ -171,7 +176,11 @@ def get_entity_property(attr_name, resource_attr_name, resource_name):
 			return 
 		else:
 			str_path, temp['@odata.id'] = get_odata_id(temp['@odata.id'])
-			create_folder(str_path)	
+			if not (os.path.isdir(str_path)):	
+				print("------------> ", str_path)	
+				return ""
+			if "{" in str_path.split("/")[-1] and "}" in str_path.split("/")[-1]:
+				create_folder(str_path)	
 		
 	else: 
 		for child in root.iter():
@@ -184,6 +193,8 @@ def get_entity_property(attr_name, resource_attr_name, resource_name):
 						if resource_name != child.attrib['BaseType'].split('.')[0]:
 							begin_level_1 = True
 					elif resource_name == 'Resource':
+						begin_level_1 = True
+					elif len(child.attrib.keys()) == 1:
 						begin_level_1 = True
 					else:
 						pass					

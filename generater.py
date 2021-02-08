@@ -75,14 +75,17 @@ if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-T', '--odata_type', type=str, nargs='+', help='Enter need resources or all')
 	parser.add_argument('-D', '--dir', action = 'store_true' , help='create dir.')
+	parser.add_argument('-U', '--uri', type=str, help="Enter request uri .")
 	args = parser.parse_args()	
+	
+	uri = args.uri
 	odata_types = args.odata_type
 	dir_path = args.dir
-	
+	'''	
 	if 'all' in odata_types:
 		odata_types = ALL_COLLECTIONS
 	print(odata_types)
-	
+	'''
 	data = {}	
 	collection_path = []	
 		
@@ -108,10 +111,35 @@ if __name__ == "__main__":
 	print("\n################################################################################")
 	print("Get property of resource ... \n")
 	
+	uris = [type_ for type_ in uri.split('/') if not (type_ in 'redfish' or type_ in 'v1')]
+
+	next_type = False	
+	
+	for uri in uris:
+		print("--------------------\n\n")
+		print(uri)
+		
+		if next_type:
+			next_type = False
+		else:
+			for _key in responses.keys():
+				
+				# Remove the last of the word. (Remove 's')
+				odata_type = _key.find(uri[:-1])
+				if not odata_type == -1:
+					print(_key)
+					next_type = True
+					redfish_data = responses[_key]
+					if 'child' in redfish_data.keys():
+						child_odata_type = redfish_data['child']['@odata_type'].split('.')[-1]
+						child_redfish_data = redfish_data['child']
+						create_redfish_data(child_odata_type, child_redfish_data)
+					create_redfish_data(_key, redfish_data)
+
+	'''
 	if bool(odata_types):
 		for odata_type in odata_types:
 			redfish_data = responses[odata_type]
-			establish_level_number = 1
 			if __debug__:
 				print("### Redfish data: ",redfish_data)			
 		
@@ -122,6 +150,6 @@ if __name__ == "__main__":
 			
 			create_redfish_data(odata_type, redfish_data)
 	
-			
+	'''		
 	print("\n################################################################################")
 	print("OK")	
