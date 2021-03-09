@@ -11,7 +11,7 @@ from create_file_or_folder import *
 
 ENTITY_PROPERTY = ['ComplexType','EnumType']
 
-def get_json_data(path):
+def get_json_info(path):
 	if os.path.isfile(path):
 		jsonData = ""
 		with open(path, 'r', newline = '') as f:
@@ -20,11 +20,7 @@ def get_json_data(path):
 		return jsonData
 	else:
 		return None
-
-def get_entry(path):
-	with open(path, "r") as f:
-		return json.load(f)
-
+'''
 def get_odata_id(path):
 	if __debug__:
 		print("\n##########",__file__," ",str(sys._getframe().f_lineno),"###########")
@@ -32,26 +28,24 @@ def get_odata_id(path):
 	tags = path.split('/')
 	str_path = REDFISH_DATA
 	odata_id = "/"
-	print("### tags: ", tags)
+	
 	for index in range(1,len(tags)):
 		if __debug__:
 			print("### tag",tags[index],"  ",str_path)
 
-		if '{' in tags[index][:1] and '}' in tags[index][-1:]:
+		if '{' in tags[index] and '}' in tags[index]:
 			# There are some problems:
 			# 	1. The target path is unclearly.
 			#   2. How to get the name for components. ex CPU1, CPU2 ...etc. 
+			#print("#######: ",str_path)
 			try:
-				list_dir = os.listdir(str_path)
-
-				for dirname in list_dir:
-					if dirname != INFO_FILENAME:
-						tags[index] = dirname
-					else:
-						pass
+				if os.listdir(str_path):
+					for dirname in os.listdir(str_path):
+						if dirname != INFO_FILENAME:
+							tags[index] = dirname
 			except:
-				print("No find the path.")
-	
+				print("\n##########",__file__," ",str(sys._getframe().f_lineno),"###########")
+				
 		if tags[index] != 'redfish' and tags[index] != 'v1':
 			str_path = os.path.join(str_path, tags[index])
 		odata_id = os.path.join(odata_id, tags[index])
@@ -61,17 +55,22 @@ def get_odata_id(path):
 		print("### Str_path", str_path)			
 		print("#######################################\n")
 	
-	return str_path, odata_id
-
-def get_root(path):
+	temp_path = []
+	if not "./redfish_data" == str_path:
+		temp_path = create_folder(str_path)
+		
+	return temp_path, odata_id
+'''
+def get_root(attr_name):
+	path = os.path.join(RESOURCE_XML_PATH, attr_name + REDFISH_VERSION + ".xml")
 	tree = ET.parse(path)
 	root = tree.getroot()
 	return root
 
 def get_property(child):
 	return child.tag.split('}')[-1]
-
-def get_reference_resource_and_attr_name(_property, attr_name):
+'''
+def get_reference_resource_and_attr(_property, attr_name):
 	
 	if 'Collection(' in _property[attr_name]:
 		_type = _property[attr_name].split('(')[-1][:-1]
@@ -79,16 +78,18 @@ def get_reference_resource_and_attr_name(_property, attr_name):
 		_type = _property[attr_name]
 
 	return _type.split('.')[0], _type.split('.')[-1]
-
-def get_reference_path(attr_name, resource_name):
+'''
+def get_reference_path(resource_name):
 	
-	path = os.path.join(RESOURCE_XML_PATH, resource_name+'_v1.xml')
-	root = get_root(path)
+	root = get_root(resource_name)
 	for child in root.iter():
+		# Fetch first path
 		if 'String' in get_property(child):
+			# print("### String", child.text)
 			# Not sure the regular
 			return child.text
-
+	return ""
+'''
 def get_reference_property(child):
 	temp = {}
 	attr_name = ""
@@ -99,8 +100,8 @@ def get_reference_property(child):
 		temp = ""
 	elif 'Edm' == child.attrib['Type'].split('.')[0]:
 		temp = ""
-	elif 'Collection' in child.attrib['Type'].split('('):
-		resource_name, resource_attr_name = get_reference_resource_and_attr_name(child.attrib, 'Type')
+	elif 'Collection' in child.attrib['Type']:
+		resource_name, resource_attr_name = get_reference_resource_and_attr(child.attrib, 'Type')
 		dict_add_list = []
 		temp = get_entity_property(attr_name, resource_attr_name, resource_name)
 		if temp != "":
@@ -116,24 +117,31 @@ def get_reference_property(child):
 # There is one question:
 # - Use the "count"
 '''
-- count = 2 is a start point 
-- count = 3 is special case
+#- count = 2 is a start point 
+#- count = 3 is special case
 '''
 
-def get_all_property(path, attr_name):
+def get_all_property(resource_name, attr_name):
 	
-	root = get_root(path)	
+	root = get_root(resource_name)
 	attr_property = {}
 	attr_navigation_property = {}
 	temp_path = []
 
-	begin = True
+	print("resource: ", resource_name)
+	print("attr_name: ", attr_name)
+	begin = False
 	count = 1
-	
+	print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 	for child in root.iter():
+		
 		if 'String' in child.tag:
 			temp_path.append(child.text)
 		if 'Name' in child.attrib.keys():
+			# For collection, count must extra add 1
+			if child.attrib['Name'].find("Collection") != -1:
+				count += 1
+			# Ignore first line, because the line is title
 			if count == 1: 
 				count = count +1
 			elif count == 2 or count == 3:
@@ -155,32 +163,35 @@ def get_all_property(path, attr_name):
 
 def get_entity_property(attr_name, resource_attr_name, resource_name):
 	
-	path = os.path.join(RESOURCE_XML_PATH, resource_name+'_v1.xml')
 	if __debug__:	
 		print("\n######### Info ",__file__, sys._getframe().f_lineno,"############")
 		print("attr_name: ", attr_name)
 		print("resource_attr_name: ", resource_attr_name)
 		print("resource_name: ", resource_name)
-		print("path: ", path)
-		print("#######################################\n")
+		#print("#######################################\n")
 		
-	root = get_root(path)
+	root = get_root(resource_name)
 	
 	begin_level_1 = False
-	temp = {}	
+	temp = {}
 	
 	if resource_name == resource_attr_name:
 		
-		temp['@odata.id'] = get_reference_path(resource_attr_name, resource_name)
+		temp['@odata.id'] = get_reference_path(resource_name)
 		if temp['@odata.id'] == None:
-			return 
+			return ""
 		else:
+			print("temp['@odata.id']: ", temp['@odata.id'])	
 			str_path, temp['@odata.id'] = get_odata_id(temp['@odata.id'])
-			if not (os.path.isdir(str_path)):	
-				print("------------> ", str_path)	
-				return ""
-			if "{" in str_path.split("/")[-1] and "}" in str_path.split("/")[-1]:
-				create_folder(str_path)	
+			print("#### str_path: ", str_path)
+
+			#if not (os.path.isdir(str_path)):	
+			#	return ""
+				
+			#if "{" in str_path.split("/")[-1] and "}" in str_path.split("/")[-1]:
+			#	print("#### str_path: ", str_path)
+				
+			#temp['@odata.id'] = create_folder(str_path)	
 		
 	else: 
 		for child in root.iter():
@@ -212,7 +223,7 @@ def get_entity_property(attr_name, resource_attr_name, resource_name):
 					temp[temp_key] = temp_value
 		
 	return temp
-
+'''
 if __name__ == "__main__":
 	attr_property, attr_navigation_property = get_all_property(os.path.join(RESOURCE_XML_PATH,"Resource_v1.xml"),"Status")
 '''

@@ -6,30 +6,33 @@ from create_file_or_folder import create_folder
 from create_file_or_folder import create_index_json
 from redfish_get import get_root
 from redfish_get import get_reference_path
+from nodelist import search_node
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "./.."))
 from setting import *
 
 class RedfishNode:
-	def __init__(self, _key, data=None, uri=None):
-		self._key = _key
+	def __init__(self, _key, _root=None, _type=None, data=None, uri=None):
+		self.key = _key
 		self.data = data
 		self.uri = uri
+		self.type = _type
+		self.head = None
 		self.right = None
 		self.tail = None
+		self.root = _root
 	
 	def get_property(self, child):
 		return child.tag.split("}")[-1]
 	
 	# start point
-	def create_redfish_data(self):
+	def create_redfish_data(self, architecture):
 		
-		properties, navigation_properties, path_array = self.assign_property(self._key,self._key)
-		redfish_path, odata_id_path = self.get_data_path_and_redfish_path(path_array[0])
-		info = self.create_index_json_content(self.data, odata_id_path[0], properties, navigation_properties)
+		properties, navigation_properties, path_array = self.assign_property(self.type)
 
-		print("### Redfish: ",redfish_path)
-		create_index_json(redfish_path, info)
+		print("path_array: ", path_array[0])
+		self.uri, odata_id_path = self.get_data_path_and_redfish_path(path_array[0])
+		self.data = self.create_index_json_content(architecture, odata_id_path, properties, navigation_properties)
 
 	def create_index_json_content(self, data, odata_id, properties, navigation_properties):
 		# create an object with ordering
@@ -47,19 +50,23 @@ class RedfishNode:
 		info["Description"] = ""
 		info = self.create_property(info, properties)
 		info = self.create_navigation_property(info, navigation_properties)
+		
+		if 'Members' in navigation_properties or 'Members' in properties:
+			info["Members@odata.count"] = len(info["Members"])
 		info["@odata.id"] = odata_id
 		info[COPYRIGHT] = COPYRIGHT_CONTENT
 		
 		return info
 
-	def assign_property(self, resource_name, attr_name):
-		root = get_root(resource_name)
+	def assign_property(self, attr_name):
+
+		root = get_root(attr_name)
+	
+		# Declare varible and initial
 		property_dict = {}
 		navigation_property_dict = {}
 		odata_id_path_arr = []
 
-		print("resource_name: ",resource_name)
-		print("attr_name: ", attr_name)
 		# Represent as the start signal
 		gate = False
 		count = 1
@@ -76,6 +83,7 @@ class RedfishNode:
 				# Ignore first line, because the line is title
 				if count == 1:
 					count += 1
+				# Start point
 				elif count == 2 or count == 3:
 					if 'BaseType' in child.attrib.keys():
 						# Determine the starting point
@@ -93,7 +101,6 @@ class RedfishNode:
 								property_dict[child.attrib["Name"]] = child.attrib["Type"]
 							elif property_name == "NavigationProperty":
 								navigation_property_dict[child.attrib["Name"]] = child.attrib["Type"]
-
 							else:
 								pass
 						else:
@@ -101,40 +108,39 @@ class RedfishNode:
 				else:
 					break
 		return property_dict, navigation_property_dict, odata_id_path_arr
-					
-	def get_data_path_and_redfish_path(self, path):
-		tags = path.split("/")
+
+	def get_data_path_and_redfish_path(self, path):		
+		tags = path[1:].split("/")
+		#print("Path: ", path)
+	
 		# Initial root folder for data path
 		data_path = REDFISH_DATA
-		redfish_path = "/"
-
-		for index in range(len(tags)):
-			# Verifying the folder is exist
-			if "{" in tags[index] and "}"in tags[index]:
-				try:
-					dirnames = os.listdir(data_path)
-					for dirname in dirnames:
-						if dirname != INFO_FILENAME:
-							tags[index] = dirname
-				except:
-					print("\n #######", __file__, " ", str(sys._getframe().f_lineno), "#########\n")
-
-			if tags[index] != "redfish" and tags[index] != "v1":
-				data_path = os.path.join(data_path, tags[index])
-			redfish_path = os.path.join(redfish_path, tags[index])
-
-		temp_path = create_folder(data_path, self.uri)
-		return data_path, redfish_path
+		redfish_path = "/redfish/v1/"
+		
+		if not ("{" in path and "}" in path):
+			data_path = os.path.join(data_path, path.split("/v1/")[-1])
+			return data_path, path	
+		else:	
+			test_path, gate = search_node(self.root.tail,tags[2:])
+			#print("Gate: ",gate)
+			print("         ", test_path)
+			for path in test_path[:-1]:
+				data_path = os.path.join(data_path, path)
+				redfish_path = os.path.join(redfish_path, path)
+				
+			return data_path, redfish_path
 
 	# Create the attribute that exists in other resource
 	def create_reference_property(self, info, attr_name, resource_attr_name, resource_name, properties):
+
+		#11
 		entity_property = self.get_entity_property(attr_name, resource_attr_name, resource_name)
-
-		print("entity_property: ", entity_property)
-
 		if "Collection" in properties[attr_name]:
 			_list = []
-			_list.append(entity_property)
+			for entity in entity_property.values():
+				temp = {}
+				temp["@odata.id"] = entity
+				_list.append(temp)
 			info[attr_name] = _list
 		else:
 			info[attr_name] = entity_property
@@ -159,7 +165,7 @@ class RedfishNode:
 		for attr_name in properties:
 			resource_name, resource_attr_name = self.get_reference_resource_and_attr(properties, attr_name)
 			info = self.create_reference_property(info, attr_name, resource_attr_name, resource_name, properties)
-		
+	
 		return info
 					
 	def get_reference_resource_and_attr(self, properties, attr_name):
@@ -181,17 +187,22 @@ class RedfishNode:
 		# Get the reference uri
 		if resource_name == resource_attr_name:
 			reference_path = get_reference_path(resource_name)
-			print(reference_path)
+			#print("-----------> ",reference_path)
 			if reference_path == "":
 				return ""
 			else:
 				redfish_path, temp["@odata.id"] = self.get_data_path_and_redfish_path(reference_path)
-				print("### Redfish Path: ", redfish_path)
+				#print("\n######## Redfish Path: ", redfish_path)
+				#temp = create_folder(redfish_path, self.uri)
+				#print("######## temp['@odata.id']: ", temp['@odata.id'],"\n")
+		
 		else:
 			for child in root.iter():
 				if "ComplexType" in self.get_property(child) or "EntityType" in self.get_property(child):
 					if gate:
 						break
+					
+					# Search the start point
 					if resource_attr_name == child.attrib["Name"]:
 						if "BaseType" in child.attrib.keys():
 							if resource_name != child.attrib["BaseType"].split(".")[0]:
@@ -203,13 +214,16 @@ class RedfishNode:
 						else:
 							pass
 				elif "EnumType" in self.get_property(child):
-					# EnumType is represented taht the attribute includes some sub-attribute
+					# EnumType is represented that the attribute includes some sub-attribute
+					# In future, the part has to verify the attribute
 					if resource_attr_name == child.attrib["Name"]:
 						return ""
 					else:
 						pass
+
 				if gate:
 					_type = self.get_property(child)
+					# REFERENCE_PROPERTY_TARGET = ['NavigationProperty','Property']
 					if _type in REFERENCE_PROPERTY_TARGET:
 						temp_key, temp_value = self.get_reference_property(child)
 						temp[temp_key] = temp_value
@@ -218,7 +232,9 @@ class RedfishNode:
 	def get_reference_property(self, child):
 		temp_info = {}
 		attr_name = child.attrib["Name"]
-
+		
+		#print("### child.attrib: ", child.attrib)
+		
 		if "Oem" == attr_name:
 			temp = ""
 		elif "Edm" == child.attrib["Type"].split(".")[0]:
@@ -234,6 +250,7 @@ class RedfishNode:
 			reference = child.attrib["Type"].split(".")
 			resource_name, resource_attr_name = reference[0], reference[-1]
 			temp_info = self.get_entity_property(attr_name, resource_attr_name, resource_name)
+
 		return attr_name, temp_info
 
 if __name__ == "__main__":
