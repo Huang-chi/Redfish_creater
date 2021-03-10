@@ -41,9 +41,12 @@ def CLI(root):
 					
 							if value.lower() == "q" or value.lower() == "exit":
 								break
+					# branch
+					'''
 					else:
 
 						domain = uri
+					'''
 					if uri.lower() == "q" or uri.lower() == "exit":
 						break
 

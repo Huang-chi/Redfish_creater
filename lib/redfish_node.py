@@ -2,8 +2,7 @@ import os, sys, json
 
 import collections
 
-from create_file_or_folder import create_folder
-from create_file_or_folder import create_index_json
+from create_file_or_folder import search_device_info
 from redfish_get import get_root
 from redfish_get import get_reference_path
 from nodelist import search_node
@@ -31,8 +30,15 @@ class RedfishNode:
 		properties, navigation_properties, path_array = self.assign_property(self.type)
 
 		print("path_array: ", path_array[0])
-		self.uri, odata_id_path = self.get_data_path_and_redfish_path(path_array[0])
+		print("URI: ", self.uri)
+
+		temp_uri, odata_id_path = self.get_data_path_and_redfish_path(path_array[0])
+
+
+
+
 		self.data = self.create_index_json_content(architecture, odata_id_path, properties, navigation_properties)
+		self.uri = temp_uri
 
 	def create_index_json_content(self, data, odata_id, properties, navigation_properties):
 		# create an object with ordering
@@ -109,7 +115,7 @@ class RedfishNode:
 					break
 		return property_dict, navigation_property_dict, odata_id_path_arr
 
-	def get_data_path_and_redfish_path(self, path):		
+	def get_data_path_and_redfish_path(self, path, Member_is_not=False):		
 		tags = path[1:].split("/")
 		#print("Path: ", path)
 	
@@ -120,14 +126,38 @@ class RedfishNode:
 		if not ("{" in path and "}" in path):
 			data_path = os.path.join(data_path, path.split("/v1/")[-1])
 			return data_path, path	
-		else:	
+		else:
 			test_path, gate = search_node(self.root.tail,tags[2:])
-			#print("Gate: ",gate)
-			print("         ", test_path)
-			for path in test_path[:-1]:
+			target_path = self.uri.split("/")
+
+			gate = False
+			members = []
+			for path, target in zip(test_path[:-1], target_path[3:]):
+				if path == target:
+					gate = True
+				elif "{" in path and "}" in path and gate:
+					members = search_device_info(path)
+					if Member_is_not:
+						arr_members = []
+						for member in members:
+							arr_members.append(os.path.join(redfish_path,member))
+						data_path = os.path.join(data_path, target)
+
+						return data_path, arr_members
+
+					else:
+						if target in members:
+							path = target
+						else:
+							print("# Error: the link is not exist.")
+				else: pass
+
 				data_path = os.path.join(data_path, path)
 				redfish_path = os.path.join(redfish_path, path)
-				
+			if __debug__:
+				print("         ", target_path[3:])
+				print("         ", redfish_path)
+			
 			return data_path, redfish_path
 
 	# Create the attribute that exists in other resource
@@ -191,9 +221,8 @@ class RedfishNode:
 			if reference_path == "":
 				return ""
 			else:
-				redfish_path, temp["@odata.id"] = self.get_data_path_and_redfish_path(reference_path)
+				redfish_path, temp["@odata.id"] = self.get_data_path_and_redfish_path(reference_path, Member_is_not = True)
 				#print("\n######## Redfish Path: ", redfish_path)
-				#temp = create_folder(redfish_path, self.uri)
 				#print("######## temp['@odata.id']: ", temp['@odata.id'],"\n")
 		
 		else:

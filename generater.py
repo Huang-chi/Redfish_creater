@@ -153,6 +153,8 @@ if __name__ == "__main__":
 	print("Symbols: ", symbols)
 	next_type = False	
 
+	uri = ""
+
 	for index in range(len(symbols)):
 		if next_type:
 			next_type = False
@@ -165,36 +167,35 @@ if __name__ == "__main__":
 					print("#########################################\n")
 					
 					redfish_architecture = responses[_type]
+					uri = os.path.join(uri, symbols[index])
 					
 					if 'parent' in redfish_architecture.keys():
-
 						next_type = True
 				
 						parent_key = symbols[index]
 						redfish_type= redfish_architecture['parent']['@odata_type'].split('.')[-1]
 						parent_redfish_architecture = redfish_architecture['parent']
-						print("_key: ",parent_key)	
-						#create_redfish_data(parent_odata_type, parent_redfish_data, uri)
-						temp = Rf.RedfishNode(parent_key, _type = redfish_type, _root=root)
+						temp = Rf.RedfishNode(parent_key, _type = redfish_type, _root=root, uri=domain)
 						temp.create_redfish_data(parent_redfish_architecture)
 						root = add_new_node(root, temp)
-						#print("-------> ", temp._key)
-						#print("-------> ", temp.data)
-						#print("-------> ", temp.uri)
+						if __debug__:
+							print("-------> ", temp._key)
+							print("-------> ", temp.data)
+							print("-------> ", temp.uri)
 						
 						index+=1
+						uri = os.path.join(uri, symbols[index])
 
 					_key = symbols[index]
 					redfish_type = _type
-					print("_key: ", _key)
 					
-					#create_redfish_data(_key, redfish_data, uri)
-					temp_1 = Rf.RedfishNode(_key, _type = redfish_type, _root=root)
+					temp_1 = Rf.RedfishNode(_key, _type = redfish_type, _root=root, uri=domain)
 					temp_1.create_redfish_data(redfish_architecture)
 					root = add_new_node(root, temp_1)
-					#print("-------> ", temp_1._key)
-					#print("-------> ", temp_1.data)
-					#print("-------> ", temp_1.uri)
+					if __debug__:
+						print("-------> ", temp_1._key)
+						print("-------> ", temp_1.data)
+						print("-------> ", temp_1.uri)
 
 	print("\n################################################################################")
 	print("OK")

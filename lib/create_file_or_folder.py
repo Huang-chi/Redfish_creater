@@ -11,7 +11,7 @@ def create_index_json(path, data):
 		print("##### (index.json) Successful !!")
 	except Exception as e:
 		print(e)
-
+'''
 def create_folder(path, target=None):
 	final_path = []
 	print("--------------->Path: ", path)
@@ -41,6 +41,23 @@ def create_folder(path, target=None):
 			print("The folder is exist.\n")
 		
 	return final_path
+'''
+
+def search_device_info(path):
+	# For each different device, there is corresponding function
+	# For CPU
+	if "ProcessorId" in path:
+		final_path  = create_dynamic_CPU_folder(path)
+	# For Memory
+	elif "Memory" in path:
+		final_path  = create_dynamic_Memory_folder(path)
+	else:
+		final_path  = create_dynamic_Memory_folder(path)
+		print("Pass")
+		pass
+	print("Final_path: ", final_path)
+	return final_path
+	
 
 def create_dynamic_Memory_folder(path):
 	temp_path = []
