@@ -82,8 +82,7 @@ def print_tree():
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-T', '--odata_type', type=str, nargs='+', help='Enter need resources or all.')
-	parser.add_argument('-U', '--uri', type=str, help='Enter resource.')
+	parser.add_argument('-U', '--uri', type=str, help='Enter the special domain.')
 	parser.add_argument('-D', '--dir', action = 'store_true' , help='create dir.')
 	parser.add_argument('-R', '--resource', action = 'store_true', help="Install resource.")
 	parser.add_argument('-C', '--CLI', action = 'store_true', help="Open CLI.")
@@ -91,7 +90,6 @@ if __name__ == "__main__":
 
 	domain = args.uri	
 	install_resource_or_not = args.resource
-	odata_types = args.odata_type
 	dir_path = args.dir
 	
 	data = {}	
@@ -112,12 +110,6 @@ if __name__ == "__main__":
 			_key = collection.split("/")[-1]
 			symbol = _key
 			root = add_new_node(root, Rf.RedfishNode(_key, symbol, uri=collection))
-			'''
-			try:
-				os.mkdir(collection)	
-			except:
-				pass
-			'''
 	print("\n################################################################################")
 	
 	print("Get resource uri ... \n")
@@ -139,11 +131,6 @@ if __name__ == "__main__":
 		_key = entities[entity].split("/")[-1]
 		symbol = _key
 		root = add_new_node(root, Rf.RedfishNode(_key, symbol, uri = entities[entity][1:]))
-
-		try:
-			os.mkdir(entities[entity])
-		except:
-			pass
 	
 	print("\n################################################################################")
 	print("Get property of resource ... \n")
