@@ -1,6 +1,7 @@
 import os, sys
+import json
 import platform, subprocess, re
-import psutil
+from psutil import virtual_memory
 
 sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
 from setting import *
@@ -52,7 +53,32 @@ def get_special_processor(ProcessorId):
 	else:
 		print("May be the others OS.")
 
-#def get_memory_all_info():
+def get_memory_number(data):
+	return len(data)
+
+def get_memory_all_info():
+	if platform.system() == "Linux":
+		arr_memory_info = []
+		info = subprocess.check_output("dmidecode -t memory | grep -A16 'Memory Device'", shell=True).strip()
+		str_infos = (info.decode('utf-8')).split("--")
+
+		for str_info in str_infos:
+			
+			if not "No Module Installed" in str_info:
+				dict_memory_info = {}	
+				for data in str_info.split("\n\t")[1:]:
+					key, value = data.split(":")
+					dict_memory_info[key] = value
+				arr_memory_info.append(dict_memory_info)
+			else:
+				break
+		return arr_memory_info	
+
+		exist_memory = [memory  for memory in info.decode("utf-8").split("\n\t") if "MB" in memory ]
+		print(exist_memory)
+	else:
+		print("May be the others OS.")
+		return ""
 
 
 if __name__ == "__main__":
@@ -66,5 +92,11 @@ if __name__ == "__main__":
 	print("CPU(s): ", CPU_length)
 	print("Core(s): ", Core_length)
 	print("Socket(s): ", Socket_length)
-	print("Thread(s): ", Thread_length)	
-	
+	print("Thread(s): ", Thread_length)
+
+	print("\n------------------------------------------------")
+	arr_data = get_memory_all_info()
+	Memory_length = get_memory_number(arr_data)
+
+	print("Memory(s): ",Memory_length)
+	print("Form factory: ", data[0]["Form Factor"])

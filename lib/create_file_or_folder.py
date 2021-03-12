@@ -44,6 +44,8 @@ def create_folder(path, target=None):
 '''
 
 def search_device_info(path):
+	final_path = []
+	print("PPPath: ",path)
 	# For each different device, there is corresponding function
 	# For CPU
 	if "ProcessorId" in path:
@@ -61,7 +63,19 @@ def search_device_info(path):
 
 def create_dynamic_Memory_folder(path):
 	temp_path = []
-	temp_path.append("Pass")
+
+	print()
+	arr_data = get_memory_all_info()
+	Memory_length = get_memory_number(arr_data)
+	
+	print("Memory(s): ",Memory_length)
+	print("Form factor: ", arr_data[0]["Form Factor"])
+
+	target_path = path.split("{")[0]
+
+	for index in range(1,Memory_length+1):
+		temp_path.append(os.path.join(target_path, "DIMM"+str(index)))
+
 	return temp_path
 
 def create_dynamic_CPU_folder(path):

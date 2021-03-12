@@ -154,14 +154,15 @@ if __name__ == "__main__":
 					print("#########################################\n")
 					
 					redfish_architecture = responses[_type]
+					print("redfish_architecture: ", redfish_architecture)
 					uri = os.path.join(uri, symbols[index])
-					
 					if 'parent' in redfish_architecture.keys():
 						next_type = True
 				
 						parent_key = symbols[index]
 						redfish_type= redfish_architecture['parent']['@odata_type'].split('.')[-1]
 						parent_redfish_architecture = redfish_architecture['parent']
+
 						temp = Rf.RedfishNode(parent_key, _type = redfish_type, _root=root, uri=domain)
 						temp.create_redfish_data(parent_redfish_architecture)
 						root = add_new_node(root, temp)
@@ -171,11 +172,15 @@ if __name__ == "__main__":
 							print("-------> ", temp.uri)
 						
 						index+=1
+
+						if index == len(symbols):
+							break
+
 						uri = os.path.join(uri, symbols[index])
 
 					_key = symbols[index]
 					redfish_type = _type
-					
+						
 					temp_1 = Rf.RedfishNode(_key, _type = redfish_type, _root=root, uri=domain)
 					temp_1.create_redfish_data(redfish_architecture)
 					root = add_new_node(root, temp_1)
