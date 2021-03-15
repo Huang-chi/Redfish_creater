@@ -2,28 +2,17 @@
 # -*- coding: UTF-8 -*-
 
 import json
-import os, sys
+import os
 import urllib.request
 import argparse
-import subprocess
-
+import redfish_node as Rf
 
 from setting import *
 from xml.etree import ElementTree as ET
-
-# Private package
-sys.path.append(os.path.join(os.path.dirname(__file__),'lib'))
-
-import redfish_node as Rf
-
-#from redfish_create import create_redfish_data
 from redfish_create import create_collection
 from redfish_create import create_entity
 from redfish_get import get_json_info
 from nodelist import add_new_node
-from nodelist import display_all_node
-from CLI import CLI
-
 
 def analysis_xml(path):
 	tree = ET.parse(path)
@@ -77,50 +66,27 @@ def setup_install_resource():
 	for attr in uri_info.values():
 		install_resource(responses, attr)
 
-def print_tree():
-	subprocess.call(['tree','./redfish_data/'], shell = False)
-
-if __name__ == "__main__":
-	parser = argparse.ArgumentParser()
-	parser.add_argument('-U', '--uri', type=str, help='Enter the special domain.')
-	parser.add_argument('-D', '--dir', action = 'store_true' , help='create dir.')
-	parser.add_argument('-R', '--resource', action = 'store_true', help="Install resource.")
-	parser.add_argument('-C', '--CLI', action = 'store_true', help="Open CLI.")
-	args = parser.parse_args()	
-
-	domain = args.uri	
-	install_resource_or_not = args.resource
-	dir_path = args.dir
+def get_collection(root):	
+	print("Create collection ... \n")
+	collections = create_collection(get_json_info(JSON_PATH))
+	print(collections)
+	for collection in collections:
+		_key = collection.split("/")[-1]
+		symbol = _key
+		root = add_new_node(root, Rf.RedfishNode(_key, symbol, uri=collection))
+	return root
 	
-	data = {}	
-	collection_path = []
-	root = None
-	
-	# Data form: 
-	# _key: redfish_data
-	# uri: ./redfish_data
-	root = add_new_node(root, Rf.RedfishNode(REDFISH_DATA[2:], REDFISH_DIR, uri = REDFISH_DATA))
-	
-	if not bool(dir_path):
-		print("\n################################################################################")
-		print("Create collection ... \n")
-		collections = create_collection(get_json_info(JSON_PATH))
-		print(collections)
-		for collection in collections:
-			_key = collection.split("/")[-1]
-			symbol = _key
-			root = add_new_node(root, Rf.RedfishNode(_key, symbol, uri=collection))
-	print("\n################################################################################")
-	
+def get_resource_uri(install_resource_gate):
 	print("Get resource uri ... \n")
 	responses = analysis_xml(XML_PATH)
 	if __debug__:
 		print("### Responses: ", responses)
 	
-	if install_resource_or_not:
+	if install_resource_gate:
 		setup_install_resource()
+	return responses
 
-	print("\n################################################################################")
+def create_data_entity(root):
 	print("Get data entity ... \n")
 	entities = create_entity(CONFIG_PATH)
 	
@@ -132,14 +98,14 @@ if __name__ == "__main__":
 		symbol = _key
 		root = add_new_node(root, Rf.RedfishNode(_key, symbol, uri = entities[entity][1:]))
 	
-	print("\n################################################################################")
-	print("Get property of resource ... \n")
+	return root
+
+def create_specified_data_entity(root, domain, responses):
 	
 	symbols = [type_ for type_ in domain.split('/') if not (type_ in 'redfish' or type_ in 'v1')]
 
 	print("Symbols: ", symbols)
 	next_type = False	
-
 	uri = ""
 
 	for index in range(len(symbols)):
@@ -188,9 +154,4 @@ if __name__ == "__main__":
 						print("-------> ", temp_1._key)
 						print("-------> ", temp_1.data)
 						print("-------> ", temp_1.uri)
-
-	print("\n################################################################################")
-	print("OK")
-
-	if args.CLI:
-		CLI(root)
+	return root

@@ -29,8 +29,8 @@ class RedfishNode:
 		
 		properties, navigation_properties, path_array = self.assign_property(self.type)
 
-		print("path_array: ", path_array[0])
-		print("URI: ", self.uri)
+		#print("path_array: ", path_array[0])
+		#print("URI: ", self.uri)
 
 		temp_uri, odata_id_path = self.get_data_path_and_redfish_path(path_array[0])
 		self.data = self.create_index_json_content(architecture, odata_id_path, properties, navigation_properties)
@@ -113,7 +113,7 @@ class RedfishNode:
 
 	def get_data_path_and_redfish_path(self, path, Member_is_not=False):		
 		tags = path[1:].split("/")
-		print("Path: ", path)
+		#print("Path: ", path)
 	
 		# Initial root folder for data path
 		data_path = REDFISH_DATA
@@ -149,9 +149,9 @@ class RedfishNode:
 
 				data_path = os.path.join(data_path, path)
 				redfish_path = os.path.join(redfish_path, path)
-			# if __debug__:
-			print("         ", target_path[3:])
-			print("         ", redfish_path)
+			if __debug__:
+				print("         ", target_path[3:])
+				print("         ", redfish_path)
 			
 			return data_path, redfish_path
 
@@ -205,8 +205,6 @@ class RedfishNode:
 		if "Collection(" in properties[attr_name]:
 			res = properties[attr_name].split("Collection")[-1][1:-1].split(".")		
 			resource, attr_name = res[0],res[-1]
-			print("resource: ", resource)
-			print("attr_name: ", attr_name)
 		else:
 			_type = properties[attr_name].split(".")	
 			resource, attr_name = _type[0], _type[-1]
@@ -219,8 +217,6 @@ class RedfishNode:
 		gate = False
 		temp = {}
 	
-		print("resource_attr_name: ", resource_attr_name)
-		print("resource_name: ", resource_name)	
 		# Get the reference uri
 		if resource_name == resource_attr_name:
 			reference_path = get_reference_path(resource_name)
@@ -229,8 +225,9 @@ class RedfishNode:
 				return ""
 			else:
 				redfish_path, temp["@odata.id"] = self.get_data_path_and_redfish_path(reference_path, Member_is_not = True)
-				print("\n######## Redfish Path: ", redfish_path)
-				print("######## temp['@odata.id']: ", temp['@odata.id'],"\n")
+				if __debug__:
+					print("\n######## Redfish Path: ", redfish_path)
+					print("######## temp['@odata.id']: ", temp['@odata.id'],"\n")
 		
 		else:
 			for child in root.iter():
