@@ -29,14 +29,7 @@ class RedfishNode:
 		
 		properties, navigation_properties, path_array = self.assign_property(self.type)
 
-		print("path_array: ", path_array[0])
-		print("URI: ", self.uri)
-
 		temp_uri, odata_id_path = self.get_data_path_and_redfish_path(path_array[0])
-
-
-
-
 		self.data = self.create_index_json_content(architecture, odata_id_path, properties, navigation_properties)
 		self.uri = temp_uri
 
@@ -142,7 +135,6 @@ class RedfishNode:
 						for member in members:
 							arr_members.append(os.path.join(redfish_path,member))
 						data_path = os.path.join(data_path, target)
-
 						return data_path, arr_members
 
 					else:
@@ -165,15 +157,21 @@ class RedfishNode:
 
 		#11
 		entity_property = self.get_entity_property(attr_name, resource_attr_name, resource_name)
-		if "Collection" in properties[attr_name]:
-			_list = []
-			for entity in entity_property.values():
-				temp = {}
-				temp["@odata.id"] = entity
-				_list.append(temp)
-			info[attr_name] = _list
-		else:
-			info[attr_name] = entity_property
+		if not entity_property:
+			if "Collection" in properties[attr_name]:
+				info[attr_name] = []
+			else:
+				info[attr_name] = entity_property
+		else:			
+			if "Collection" in properties[attr_name]:
+				_list = []
+				for entity in entity_property.values():
+					temp = {}
+					temp["@odata.id"] = entity
+					_list.append(temp)
+				info[attr_name] = _list
+			else:
+				info[attr_name] = entity_property
 
 		return info
 	
@@ -199,9 +197,11 @@ class RedfishNode:
 		return info
 					
 	def get_reference_resource_and_attr(self, properties, attr_name):
+		
 		# Remove "(" and ")"
 		if "Collection(" in properties[attr_name]:
-			resource, attr_name = properties[attr_name].split("Collection")[-1][1:-1].split(".")	
+			res = properties[attr_name].split("Collection")[-1][1:-1].split(".")		
+			resource, attr_name = res[0],res[-1]
 		else:
 			_type = properties[attr_name].split(".")	
 			resource, attr_name = _type[0], _type[-1]
@@ -213,7 +213,7 @@ class RedfishNode:
 		
 		gate = False
 		temp = {}
-		
+	
 		# Get the reference uri
 		if resource_name == resource_attr_name:
 			reference_path = get_reference_path(resource_name)
@@ -222,8 +222,9 @@ class RedfishNode:
 				return ""
 			else:
 				redfish_path, temp["@odata.id"] = self.get_data_path_and_redfish_path(reference_path, Member_is_not = True)
-				#print("\n######## Redfish Path: ", redfish_path)
-				#print("######## temp['@odata.id']: ", temp['@odata.id'],"\n")
+				if __debug__:
+					print("\n######## Redfish Path: ", redfish_path)
+					print("######## temp['@odata.id']: ", temp['@odata.id'],"\n")
 		
 		else:
 			for child in root.iter():
@@ -272,7 +273,7 @@ class RedfishNode:
 			resource_name, resource_attr_name = self.get_reference_resource_and_attr(child.attrib, "Type")
 			temp_list = []
 			temp = self.get_entity_property(attr_name, resource_attr_name, resource_name)
-			if temp != "":
+			if temp:
 				temp_list.append(temp)
 			temp_info = temp_list
 		else:

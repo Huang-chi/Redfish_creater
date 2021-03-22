@@ -11,39 +11,9 @@ def create_index_json(path, data):
 		print("##### (index.json) Successful !!")
 	except Exception as e:
 		print(e)
-'''
-def create_folder(path, target=None):
-	final_path = []
-	print("--------------->Path: ", path)
-	
-	if path.find("{") != -1:
-		# For each different device, there is corresponding function
-		# For CPU
-		if "ProcessorId" in path:
-			final_path  = create_dynamic_CPU_folder(path)
-		# For Memory
-		elif "Memory" in path:
-			final_path  = create_dynamic_Memory_folder(path)
-		else:
-			final_path  = create_dynamic_Memory_folder(path)
-			print("Pass")
-			pass
-	else:
-		final_path.append(path)
-		
-	for	temp in final_path:
-		try:	
-			if not os.path.isdir(temp):
-				print("Path: ", temp)
-				os.mkdir(temp)
-				print("##### (create folder) Successful !!\n")
-		except:
-			print("The folder is exist.\n")
-		
-	return final_path
-'''
 
 def search_device_info(path):
+	final_path = []
 	# For each different device, there is corresponding function
 	# For CPU
 	if "ProcessorId" in path:
@@ -61,7 +31,18 @@ def search_device_info(path):
 
 def create_dynamic_Memory_folder(path):
 	temp_path = []
-	temp_path.append("Pass")
+
+	arr_data = get_memory_all_info()
+	Memory_length = get_memory_number(arr_data)
+	
+	print("Memory(s): ",Memory_length)
+	print("Form factor: ", arr_data[0]["Form Factor"])
+
+	target_path = path.split("{")[0]
+
+	for index in range(1,Memory_length+1):
+		temp_path.append(os.path.join(target_path, "DIMM"+str(index)))
+
 	return temp_path
 
 def create_dynamic_CPU_folder(path):

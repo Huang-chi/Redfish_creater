@@ -6,7 +6,7 @@ from redfish_get import *
 from create_file_or_folder import *
 from get_component_info import *
 
-def create_collection(response):
+def get_collections(response):
 	Collection_set_array = []
 	Collection_path = ''
 	
