@@ -23,6 +23,8 @@ def add_new_node(root, info):
 
 def search_node(root, path, index=0, gate=False):
 	# path = /key1/key2/key6
+
+	#print(path)
 	test_path = []
 
 	if root is None and index < len(path):
@@ -58,6 +60,8 @@ def show_all_node(root):
 	print("\n")
 	print("### Key: ", root.key)
 	print("### Data: ",root.data)
+	print("### uri: ",root.uri)
+	
 	print("### current: ", root)
 	print("### right: ",root.right)
 	print("### tail: ",root.tail)

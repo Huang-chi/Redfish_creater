@@ -7,11 +7,11 @@ TOOL_VERSION = "1.1.4"
 LIB_TEST = "./lib/private/output/libtest.so"
 
 ########### Resource file of folder #################
-JSON_PATH = "./test/index.json"
+JSON_PATH = "./outside_doc/index.json"
 REDFISH_DATA = "./redfish_data"
-XML_PATH = "./test/index.xml"
+XML_PATH = "./outside_doc/index.xml"
 RESOURCE_URI_PATH = "./resource.json"
-CONFIG_PATH = "./test/explorer_config.json"
+CONFIG_PATH = "./outside_doc/explorer_config.json"
 RESOURCE_XML_PATH = "./resource"
 
 ########### Python code #################

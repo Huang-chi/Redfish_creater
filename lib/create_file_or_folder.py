@@ -17,9 +17,11 @@ def search_device_info(path):
 	# For each different device, there is corresponding function
 	# For CPU
 	if "ProcessorId" in path:
+		print("ProcessorId")
 		final_path  = create_dynamic_CPU_folder(path)
 	# For Memory
 	elif "Memory" in path:
+		print("Memory")
 		final_path  = create_dynamic_Memory_folder(path)
 	else:
 		final_path  = create_dynamic_Memory_folder(path)

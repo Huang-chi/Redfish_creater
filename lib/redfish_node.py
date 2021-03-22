@@ -30,6 +30,8 @@ class RedfishNode:
 		properties, navigation_properties, path_array = self.assign_property(self.type)
 
 		temp_uri, odata_id_path = self.get_data_path_and_redfish_path(path_array[0])
+
+
 		self.data = self.create_index_json_content(architecture, odata_id_path, properties, navigation_properties)
 		self.uri = temp_uri
 
@@ -120,35 +122,42 @@ class RedfishNode:
 			data_path = os.path.join(data_path, path.split("/v1/")[-1])
 			return data_path, path	
 		else:
+			print("Self.uri: ",self.uri)
 			test_path, gate = search_node(self.root.tail,tags[2:])
 			target_path = self.uri.split("/")
 
 			gate = False
 			members = []
-			for path, target in zip(test_path[:-1], target_path[3:]):
-				if path == target:
-					gate = True
-				elif "{" in path and "}" in path and gate:
-					members = search_device_info(path)
-					if Member_is_not:
-						arr_members = []
-						for member in members:
-							arr_members.append(os.path.join(redfish_path,member))
-						data_path = os.path.join(data_path, target)
-						return data_path, arr_members
 
-					else:
-						if target in members:
-							path = target
+			for path, target in zip(test_path, target_path[2:]):
+
+				if path:	
+					if path == target:
+						gate = True
+					elif "{" in path and "}" in path and gate:
+						members = search_device_info(path)
+						if Member_is_not:
+							arr_members = []
+							for member in members:
+								arr_members.append(os.path.join(redfish_path,member))
+							data_path = os.path.join(data_path, target)
+							return data_path, arr_members
+	
 						else:
-							print("# Error: the link is not exist.")
-				else: pass
+							if target in members:
+								path = target
+							else:
+								print("# Error: the link is not exist.")
+					else: pass
+				
+					data_path = os.path.join(data_path, path)
+					redfish_path = os.path.join(redfish_path, path)
+				else:
+					break
 
-				data_path = os.path.join(data_path, path)
-				redfish_path = os.path.join(redfish_path, path)
-			if __debug__:
-				print("         ", target_path[3:])
-				print("         ", redfish_path)
+			#if __debug__:
+			print("         ", data_path)
+			print("         ", redfish_path)
 			
 			return data_path, redfish_path
 
@@ -217,7 +226,7 @@ class RedfishNode:
 		# Get the reference uri
 		if resource_name == resource_attr_name:
 			reference_path = get_reference_path(resource_name)
-			#print("-----------> ",reference_path)
+			print("-----------> ",reference_path)
 			if reference_path == "":
 				return ""
 			else:
