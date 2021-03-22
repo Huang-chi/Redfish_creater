@@ -9,7 +9,7 @@ import redfish_node as Rf
 
 from setting import *
 from xml.etree import ElementTree as ET
-from redfish_create import create_collection
+from redfish_create import get_collections
 from redfish_create import create_entity
 from redfish_get import get_json_info
 from nodelist import add_new_node
@@ -66,10 +66,9 @@ def setup_install_resource():
 	for attr in uri_info.values():
 		install_resource(responses, attr)
 
-def get_collection(root):	
+def create_collections(root):	
 	print("Create collection ... \n")
-	collections = create_collection(get_json_info(JSON_PATH))
-	print(collections)
+	collections = get_collections(get_json_info(JSON_PATH))
 	for collection in collections:
 		_key = collection.split("/")[-1]
 		symbol = _key
@@ -86,8 +85,8 @@ def get_resource_uri(install_resource_gate):
 		setup_install_resource()
 	return responses
 
-def create_data_entity(root):
-	print("Get data entity ... \n")
+def create_define_entity(root):
+	print("Get define entity ... \n")
 	entities = create_entity(CONFIG_PATH)
 	
 	if __debug__:
@@ -100,7 +99,7 @@ def create_data_entity(root):
 	
 	return root
 
-def create_specified_data_entity(root, domain, responses):
+def create_data_entity(root, domain, responses):
 	
 	symbols = [type_ for type_ in domain.split('/') if not (type_ in 'redfish' or type_ in 'v1')]
 

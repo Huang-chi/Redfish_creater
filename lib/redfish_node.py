@@ -29,9 +29,6 @@ class RedfishNode:
 		
 		properties, navigation_properties, path_array = self.assign_property(self.type)
 
-		#print("path_array: ", path_array[0])
-		#print("URI: ", self.uri)
-
 		temp_uri, odata_id_path = self.get_data_path_and_redfish_path(path_array[0])
 		self.data = self.create_index_json_content(architecture, odata_id_path, properties, navigation_properties)
 		self.uri = temp_uri
@@ -160,7 +157,7 @@ class RedfishNode:
 
 		#11
 		entity_property = self.get_entity_property(attr_name, resource_attr_name, resource_name)
-		if entity_property == "":
+		if not entity_property:
 			if "Collection" in properties[attr_name]:
 				info[attr_name] = []
 			else:
@@ -276,7 +273,7 @@ class RedfishNode:
 			resource_name, resource_attr_name = self.get_reference_resource_and_attr(child.attrib, "Type")
 			temp_list = []
 			temp = self.get_entity_property(attr_name, resource_attr_name, resource_name)
-			if temp != "":
+			if temp:
 				temp_list.append(temp)
 			temp_info = temp_list
 		else:

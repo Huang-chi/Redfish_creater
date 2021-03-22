@@ -1,5 +1,4 @@
 import sys
-#import redfish_node as Rf
 # sys.setrecursionlimit(2000)
 
 def add_new_node(root, info):
@@ -54,7 +53,7 @@ def search_node(root, path, index=0, gate=False):
 
 	return test_path, gate
 
-def display_all_node(root):
+def show_all_node(root):
 
 	print("\n")
 	print("### Key: ", root.key)
@@ -67,9 +66,9 @@ def display_all_node(root):
 	print("----------------------------")
 	
 	if not (root.tail is None):
-		display_all_node(root.tail)
+		show_all_node(root.tail)
 	if not (root.right is None):
-		display_all_node(root.right)
+		show_all_node(root.right)
 	
 	return ""
 
