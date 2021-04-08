@@ -10,8 +10,7 @@ def add_new_node(root, info):
 		root.data = info.data
 		return root
 	else:
-		if root.key in info.uri:
-			
+		if root.key in info.uri:		
 			cur = add_new_node(root.tail, info)
 			root.tail = cur
 			cur.head = root
@@ -24,9 +23,8 @@ def add_new_node(root, info):
 def search_node(root, path, index=0, gate=False):
 	# path = /key1/key2/key6
 
-	#print(path)
 	test_path = []
-
+	print(index," **** ",path," *** ",root)
 	if root is None and index < len(path):
 		gate = True
 		cur, gate = search_node(root, path, index+1, gate)
@@ -38,18 +36,22 @@ def search_node(root, path, index=0, gate=False):
 	elif root is None and index == len(path):
 		return [None], gate
 	
+	print("# ",path[index])
 	# solution 2: The case is incomplete path.
 	if "{" in path[index] and "}" in path[index]:
+		print("1 ",root.key)
 		cur, gate = search_node(root.tail, path, index+1, gate)
 		test_path.append(root.key)
 		test_path = test_path + cur
 		return test_path, gate
 
 	if path[index] == root.key:
+		print("2 ",root.key)
 		cur, gate = search_node(root.tail, path, index+1, gate)
 		test_path.append(root.key)
 		test_path = test_path + cur
 	else:
+		print("3 ",root.key)
 		cur, gate = search_node(root.right, path, index, gate)
 		test_path = test_path + cur
 
@@ -59,7 +61,7 @@ def show_all_node(root):
 
 	print("\n")
 	print("### Key: ", root.key)
-	print("### Data: ",root.data)
+	#print("### Data: ",root.data)
 	print("### uri: ",root.uri)
 	
 	print("### current: ", root)

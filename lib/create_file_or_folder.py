@@ -2,7 +2,8 @@ import os
 import json
 
 from setting import *
-from get_component_info import *
+from CPU_info import *
+from mem_info import *
 
 def create_index_json(path, data):
 	try:
@@ -17,25 +18,24 @@ def search_device_info(path):
 	# For each different device, there is corresponding function
 	# For CPU
 	if "ProcessorId" in path:
-		print("ProcessorId")
+		print("# ProcessorId")
 		final_path  = create_dynamic_CPU_folder(path)
 	# For Memory
 	elif "Memory" in path:
-		print("Memory")
+		print("# Memory")
 		final_path  = create_dynamic_Memory_folder(path)
 	else:
 		final_path  = create_dynamic_Memory_folder(path)
 		print("Pass")
-		pass
+		
 	print("Final_path: ", final_path)
 	return final_path
 	
 
 def create_dynamic_Memory_folder(path):
 	temp_path = []
-
-	arr_data = get_memory_all_info()
-	Memory_length = get_memory_number(arr_data)
+	arr_data = get_mem_info()
+	Memory_length = get_mem_number(arr_data)
 	
 	print("Memory(s): ",Memory_length)
 	print("Form factor: ", arr_data[0]["Form Factor"])

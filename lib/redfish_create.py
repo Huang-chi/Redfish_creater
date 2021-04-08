@@ -4,7 +4,7 @@ import collections
 from setting import*
 from redfish_get import *
 from create_file_or_folder import *
-from get_component_info import *
+from CPU_info import *
 
 def get_collections(response):
 	Collection_set_array = []

@@ -70,7 +70,15 @@ def CLI(root, responses):
 							else:
 								last_root = cur_root.right
 							index += 1
-							
+
+			elif value.lower() == "head":
+				if (root.head == None):
+					print(root.key)
+				else:
+					print(root.key)
+			else:
+				pass
+										
 					
 			if value == "\t":
 				print("----")

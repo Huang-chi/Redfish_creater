@@ -122,7 +122,8 @@ class RedfishNode:
 			data_path = os.path.join(data_path, path.split("/v1/")[-1])
 			return data_path, path	
 		else:
-			print("Self.uri: ",self.uri)
+			#print("Self.uri: ",self.uri)
+			print("--------------------------------------")
 			test_path, gate = search_node(self.root.tail,tags[2:])
 			target_path = self.uri.split("/")
 
@@ -155,16 +156,15 @@ class RedfishNode:
 				else:
 					break
 
-			#if __debug__:
-			print("         ", data_path)
-			print("         ", redfish_path)
+			if __debug__:
+				print("         ", data_path)
+				print("         ", redfish_path)
 			
 			return data_path, redfish_path
 
 	# Create the attribute that exists in other resource
 	def create_reference_property(self, info, attr_name, resource_attr_name, resource_name, properties):
 
-		#11
 		entity_property = self.get_entity_property(attr_name, resource_attr_name, resource_name)
 		if not entity_property:
 			if "Collection" in properties[attr_name]:
@@ -202,7 +202,7 @@ class RedfishNode:
 		for attr_name in properties:
 			resource_name, resource_attr_name = self.get_reference_resource_and_attr(properties, attr_name)
 			info = self.create_reference_property(info, attr_name, resource_attr_name, resource_name, properties)
-	
+		
 		return info
 					
 	def get_reference_resource_and_attr(self, properties, attr_name):
@@ -226,7 +226,7 @@ class RedfishNode:
 		# Get the reference uri
 		if resource_name == resource_attr_name:
 			reference_path = get_reference_path(resource_name)
-			print("-----------> ",reference_path)
+			
 			if reference_path == "":
 				return ""
 			else:

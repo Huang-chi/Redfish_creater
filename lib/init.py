@@ -114,9 +114,7 @@ def create_data_entity(root, domain, responses):
 			for _type in responses.keys():
 				# Remove the last of the word (Remove 's') and find related type.
 				match_resource_or_not = (_type.find(symbols[index][:-1]) != -1)
-				
 				if match_resource_or_not:
-					print("#########################################\n")
 					
 					redfish_architecture = responses[_type]
 					#print("redfish_architecture: ", redfish_architecture)
