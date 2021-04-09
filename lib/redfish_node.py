@@ -125,6 +125,7 @@ class RedfishNode:
 			#print("Self.uri: ",self.uri)
 			print("--------------------------------------")
 			test_path, gate = search_node(self.root.tail,tags[2:])
+			print(test_path)
 			target_path = self.uri.split("/")
 
 			gate = False

@@ -2,8 +2,10 @@ import os
 import json
 
 from setting import *
-from CPU_info import *
-from mem_info import *
+from CPU_info import get_cpu_info
+from CPU_info import get_cpu_number
+from mem_info import get_mem_info
+from mem_info import get_mem_number
 
 def create_index_json(path, data):
 	try:
@@ -52,7 +54,7 @@ def create_dynamic_CPU_folder(path):
 	info_index = 0
 
 	if "{" in path and "}" in path:
-		cpu_data = get_cpu_all_info()
+		cpu_data = get_cpu_info()
 		info_index = get_cpu_number(cpu_data)
 	
 	target_path = path.split("{")[0]

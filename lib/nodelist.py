@@ -33,7 +33,8 @@ def search_node(root, path, index=0, gate=False):
 		return test_path, gate
 
 	# solution 1: The case is complete path.
-	elif root is None and index == len(path):
+	elif index == len(path):
+	#elif root is None and index == len(path):
 		return [None], gate
 	
 	print("# ",path[index])
@@ -61,7 +62,7 @@ def show_all_node(root):
 
 	print("\n")
 	print("### Key: ", root.key)
-	#print("### Data: ",root.data)
+	print("### Data: ",root.data)
 	print("### uri: ",root.uri)
 	
 	print("### current: ", root)
