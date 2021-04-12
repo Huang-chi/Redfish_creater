@@ -27,9 +27,7 @@ logger.addHandler(ch)
 # ssl (For target future needs to implement the secret function)
 context = ssl.create_default_context()
 
-
-def main():
-
+def init():
         logger.info("Redfish Mockup Server, version {}".format(TOOL_VERSION))
 
         parser = argparse.ArgumentParser(description='Serve a static Redfish mockup.')
@@ -50,10 +48,13 @@ def main():
         parser.add_argument('--cert', help='the certificate for SSL')
         parser.add_argument('--key', help='the key for SSL')
         parser.add_argument('-S', '--short-form', '--shortForm', action='store_true', help='apply short form to mockup (omit filepath /redfish/v1)')
-        parser.add_argument('-P', '--ssdp', action='store_true',
+       	parser.add_argument('-P', '--ssdp', action='store_true',
                             help='make mockup SSDP discoverable')
 
-        args = parser.parse_args()
+        return parser.parse_args()
+
+def set_server(args):
+
         hostname = args.host
         port = args.port
         mockDirPath = args.dir
@@ -105,9 +106,10 @@ def main():
             sys.exit(2)
 
         mySSDP = None
+        
         if ssdpStart:
             from gevent import monkey
-            monkey.patch_all()
+            monkey.patch_all()  
             # construct path "mockdir/path/to/resource/<filename>"
             path, filename, jsonData = '/redfish/v1', 'index.json', None
             apath = myServer.mockDir
@@ -115,20 +117,20 @@ def main():
             fpath = os.path.join(apath, rpath, filename) if filename not in ['', None] else os.path.join(apath, rpath)
 
 				
-            sys.path.append(os.path.join(os.path.dirname(__file__),'lib'))
-            from redfish_get import get_json_data
+            #sys.path.append(os.path.join(os.path.dirname(__file__),'lib'))
+            from redfish_get import get_json_info
             
-            jsonData = get_json_data(fpath)
+            jsonData = get_json_info(fpath)
 
             protocol = '{}://'.format('https' if sslMode else 'http')
             mySSDP = RfSSDPServer(jsonData, '{}{}:{}{}'.format(protocol, hostname, port, '/redfish/v1'), hostname)
-
+        
         logger.info("Serving Redfish mockup on port: {}".format(port))
+
+        return myServer
+
+def run_server(myServer):
         try:
-            if mySSDP is not None:
-                t2 = threading.Thread(target=mySSDP.start)
-                t2.daemon = True
-                t2.start()
             logger.info('running Server...')
             myServer.serve_forever()
 
@@ -139,4 +141,9 @@ def main():
         logger.info("Shutting down http server")
 
 if __name__ == "__main__":
-    main()
+
+	myserver = set_server(init())
+	run_server(myserver)
+	
+	print("666666666666666666666")
+

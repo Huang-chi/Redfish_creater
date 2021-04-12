@@ -12,7 +12,7 @@ from dict_process import *
 from redfish_path import *
 
 sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
-from redfish_get import get_json_data
+from redfish_get import get_json_info
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
             """
 
             if path not in self.patchedLinks:
-                jsonData = get_json_data(path)
+                jsonData = get_json_info(path)
             else:
                 jsonData = self.patchedLinks[path]
             return jsonData is not None and jsonData != '404', jsonData

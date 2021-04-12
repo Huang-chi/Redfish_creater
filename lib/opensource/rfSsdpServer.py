@@ -78,16 +78,12 @@ class RfSSDPServer():
         countTimeout = pcount = 0
         while True:
             try:
-                print("###",pcount)
                 if countTimeout % 5 == 0:
                     logger.info('Ssdp Poll... {} pings'.format(pcount))
                     pcount = 0
                     countTimeout = 1
-                print("*****")
                 data, addr = self.sock.recvfrom(1024)
-                print("######")
                 pcount += 1
-                print("Data: ",data)
                 self.check(data, addr)
             except socket.timeout:
                 countTimeout += 1
