@@ -13,6 +13,8 @@ from redfish_path import *
 
 sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
 from redfish_get import get_json_info
+from nodelist import search_node
+from init import create_data_entity
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -44,12 +46,16 @@ class RfMockupServer(BaseHTTPRequestHandler):
         def get_cached_link(self, path):
             """get_cached_link
             :param path:
-            """
-
+            """ 
+            path = os.path.join("redfish_data",path.split("1/")[-1])
+            jsonData = search_node(self.server.root, path.split("/"))
+            print("# jsonData = ", jsonData)
+            '''
             if path not in self.patchedLinks:
                 jsonData = get_json_info(path)
             else:
                 jsonData = self.patchedLinks[path]
+            '''
             return jsonData is not None and jsonData != '404', jsonData
 
         def try_to_sleep(self, method, path):
@@ -287,21 +293,15 @@ class RfMockupServer(BaseHTTPRequestHandler):
 
         def do_GET(self):
             """do_GET"""
+            print("root: ",self.server.root)
 
             # for GETs always dump the request headers to the console
             # there is no request data, so no need to dump that
             logger.info(("GET", self.path))
             logger.info("   GET: Headers: {}".format(self.headers))
 
-            # construct path "mockdir/path/to/resource/<filename>"
-            fpath = self.construct_path(self.path, 'index.json')
-            fpath_xml = self.construct_path(self.path, 'index.xml')
-            fpath_headers = self.construct_path(self.path, 'headers.json')
-            fpath_direct = self.construct_path(self.path, '')
-
-
-            success, payload = self.get_cached_link(fpath)
-
+            success, payload = self.get_cached_link(self.path)
+            print("success ",success," payload ", payload)
             scheme, netloc, path, params, query, fragment = urlparse(self.path)
             query_pieces = parse_qs(query, keep_blank_values=True)
 
@@ -315,10 +315,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
                 self.end_headers()
 
             elif(self.path in ['/redfish', '/redfish/'] and self.server.shortForm):
-                print("------------")
                 self.send_response(200)
-                print(self.server.headers)
-                print(fpath_headers)
                 if self.server.headers and (os.path.isfile(fpath_headers)):
                     self.send_header_file(fpath_headers)
                 else:
@@ -329,7 +326,6 @@ class RfMockupServer(BaseHTTPRequestHandler):
 
             # if this location exists in memory or as file
             elif(success):
-                print("-------1--1")
                 # if headers exist... send information (except for chunk info)
                 # end headers here (always end headers after response)
                 self.send_response(200)
@@ -343,6 +339,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
 
                 # Strip the @Redfish.Copyright property
                 output_data = payload
+				
                 output_data.pop("@Redfish.Copyright", None)
                 
                 # Query evaluate
@@ -369,21 +366,6 @@ class RfMockupServer(BaseHTTPRequestHandler):
                 encoded_data = json.dumps(output_data, sort_keys=True, indent=4, separators=(",", ": ")).encode()
                 self.wfile.write(encoded_data)
 
-            # if XML...
-            elif(os.path.isfile(fpath_xml) or os.path.isfile(fpath_direct)):
-                if os.path.isfile(fpath_xml):
-                    file_extension = 'xml'
-                    f = open(fpath_xml, "r")
-                elif os.path.isfile(fpath_direct):
-                    filename, file_extension = os.path.splitext(fpath_direct)
-                    file_extension = file_extension.strip('.')
-                    f = open(fpath_direct, "r")
-                self.send_response(200)
-                self.send_header("Content-Type", "application/" + file_extension + ";odata.metadata=minimal;charset=utf-8")
-                self.send_header("OData-Version", "4.0")
-                self.end_headers()
-                self.wfile.write(f.read().encode())
-                f.close()
             else:
                 self.send_response(404)
                 self.end_headers()
@@ -465,96 +447,12 @@ class RfMockupServer(BaseHTTPRequestHandler):
 
         def do_POST(self):
                 logger.info("   POST: Headers: {}".format(self.headers))
-                if("content-length" in self.headers):
-                    lenn = int(self.headers["content-length"])
-                    if lenn == 0:
-                        data_received = {}
-                    else:
-                        try:
-                            data_received = json.loads(self.rfile.read(lenn).decode("utf-8"))
-                        except ValueError:
-                            print ('Decoding JSON has failed, sending 400')
-                            data_received = None
-                else:
-                    self.send_response(411)
-                    self.end_headers()
-                    return
 
-                self.try_to_sleep('POST', self.path)
-
-                if data_received is not None:
-                    logger.info("   POST: Data: {}".format(data_received))
-                    # construct path "mockdir/path/to/resource/<filename>"
-                    fpath = self.construct_path(self.path, 'index.json')
-                    success, payload = self.get_cached_link(fpath)
-
-                    # don't bother if this item exists, otherwise, check if its an action or a file
-                    # if file
-                    #   405 if not Collection
-                    #   204 if success
-                    #   404 if no file present
-                    if success:
-                        if payload.get('Members') is None:
-                            self.send_response(405)
-                        else:
-                            logger.info(data_received)
-                            logger.info(type(data_received))
-                            # with members, form unique ID
-                            #   must NOT exist in Members
-                            #   add ID to members, change count
-                            #   store as necessary in self.patchedLinks
-
-                            newpath = self.add_new_member(payload, data_received)
-
-                            newfpath = self.construct_path(newpath, 'index.json')
-
-                            logger.info(newfpath)
-
-                            self.patchedLinks[newfpath] = data_received
-                            self.patchedLinks[fpath] = payload
-                            self.send_response(204)
-                            self.send_header("Location", newpath)
-                            self.send_header("Content-Length", "0")
-                            self.end_headers()
-
-                    # Actions framework
-                    else:
-                        # SubmitTestEvent
-                        if 'EventService/Actions/EventService.SubmitTestEvent' in self.path:
-                            r_code = self.handle_eventing(data_received)
-                            self.send_response(r_code)
-                        # SubmitTestMetricReport
-                        elif 'TelemetryService/Actions/TelemetryService.SubmitTestMetricReport' in self.path:
-                            r_code = self.handle_telemetry(data_received)
-                            self.send_response(r_code)
-                        # All other actions (no data checking or response data)
-                        elif '/Actions/' in self.path:
-                            fpath = self.construct_path(self.path.split('/Actions/', 1)[0], 'index.json')
-                            success, payload = self.get_cached_link(fpath)
-                            if success:
-                                action_found = False
-                                try:
-                                    for action in payload['Actions']:
-                                        if action == 'Oem':
-                                            for oem_action in payload['Actions'][action]:
-                                                if payload['Actions'][action][oem_action]['target'] == self.path:
-                                                    action_found = True
-                                        else:
-                                            if payload['Actions'][action]['target'] == self.path:
-                                                action_found = True
-                                except:
-                                    pass
-                                if action_found:
-                                    self.send_response(204)
-                                else:
-                                    self.send_response(404)
-                            else:
-                                self.send_response(404)
-                        # Not found
-                        else:
-                            self.send_response(404)
-                else:
-                    self.send_response(400)
+                path  = os.path.join("/redfish_data",self.path.split("1/")[-1])
+                self.server.root  = create_data_entity(self.server.root, path, self.server.response)
+                self.send_response(204)
+                self.send_header("Location", path)
+                self.send_header("Content-Length", "0")
                 self.end_headers()
 
         def do_DELETE(self):

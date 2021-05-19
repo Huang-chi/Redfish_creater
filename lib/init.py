@@ -117,7 +117,6 @@ def create_data_entity(root, domain, responses):
 				if match_resource_or_not:
 					
 					redfish_architecture = responses[_type]
-					#print("redfish_architecture: ", redfish_architecture)
 					uri = os.path.join(uri, symbols[index])
 					if 'parent' in redfish_architecture.keys():
 						next_type = True

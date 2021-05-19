@@ -9,6 +9,9 @@ from http.server import HTTPServer
 
 # Setting
 from setting import *
+
+from CLI import CLI_setup
+
 # Private library
 sys.path.append(os.path.join(os.path.dirname(__file__),'lib/opensource'))
 from redfish_verify import verify_mockdir_is_exist
@@ -53,7 +56,7 @@ def init():
 
         return parser.parse_args()
 
-def set_server(args):
+def set_server(args, root, response):
 
         hostname = args.host
         port = args.port
@@ -98,6 +101,8 @@ def set_server(args):
         myServer.headers = headers
         myServer.timefromJson = timefromJson
         myServer.shortForm = shortForm
+        myServer.root = root
+        myServer.response = response
 
         try:
             myServer.responseTime = float(responseTime)
@@ -141,8 +146,9 @@ def run_server(myServer):
         logger.info("Shutting down http server")
 
 if __name__ == "__main__":
-
-	myserver = set_server(init())
+	
+	root, response = setup()
+	myserver = set_server(init(), root)
 	run_server(myserver)
 	
 	print("666666666666666666666")

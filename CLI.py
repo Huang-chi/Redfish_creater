@@ -14,13 +14,16 @@ from init import get_resource_uri
 from init import create_data_entity
 from init import create_define_entity
 
-def setup():
+def CLI_setup():
+	'''
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-U', '--uri', type=str, help='Enter the specified domain.')
 	parser.add_argument('-R', '--resource', action = 'store_true', help="Install resource.")
 	args = parser.parse_args()  
+	
 	domain = args.uri   
-	install_resource_gate = args.resource
+    install_resource_gate = args.resource
+	'''
 	data = {}   
 	collection_path = []
 	root = None
@@ -28,12 +31,13 @@ def setup():
 	root = add_new_node(root, Rf.RedfishNode(REDFISH_DATA[2:], REDFISH_DIR, uri = REDFISH_DATA))
 
 	root = create_collections(root)
-	responses = get_resource_uri(install_resource_gate)
+	#responses = get_resource_uri(install_resource_gate)
+	responses = get_resource_uri(False)
 	root = create_define_entity(root)
 	
 	return root, responses
 
-def CLI(root, responses):
+def CLI_main(root, responses):
 	while True:
 		domain = ""
 		try:
@@ -89,5 +93,5 @@ def CLI(root, responses):
 		
 
 if __name__ == "__main__":
-	root, responses = setup()
-	CLI(root, responses)		
+	root, responses = CLI_setup()
+	CLI_main(root, responses)		

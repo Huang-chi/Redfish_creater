@@ -5,7 +5,7 @@ import collections
 from create_file_or_folder import search_device_info
 from redfish_get import get_root
 from redfish_get import get_reference_path
-from nodelist import search_node
+from nodelist import get_node_path
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "./.."))
 from setting import *
@@ -112,7 +112,6 @@ class RedfishNode:
 
 	def get_data_path_and_redfish_path(self, path, Member_is_not=False):		
 		tags = path[1:].split("/")
-		#print("Path: ", path)
 	
 		# Initial root folder for data path
 		data_path = REDFISH_DATA
@@ -122,9 +121,8 @@ class RedfishNode:
 			data_path = os.path.join(data_path, path.split("/v1/")[-1])
 			return data_path, path	
 		else:
-			#print("Self.uri: ",self.uri)
 			print("--------------------------------------")
-			test_path, gate = search_node(self.root.tail,tags[2:])
+			test_path, gate = get_node_path(self.root.tail,tags[2:])
 			print(test_path)
 			target_path = self.uri.split("/")
 
@@ -272,8 +270,6 @@ class RedfishNode:
 	def get_reference_property(self, child):
 		temp_info = {}
 		attr_name = child.attrib["Name"]
-		
-		#print("### child.attrib: ", child.attrib)
 		
 		if "Oem" == attr_name:
 			temp = ""

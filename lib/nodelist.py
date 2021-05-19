@@ -1,4 +1,4 @@
-import sys
+import sys, os
 # sys.setrecursionlimit(2000)
 
 def add_new_node(root, info):
@@ -20,40 +20,34 @@ def add_new_node(root, info):
 			cur.head = root
 	return root
 
-def search_node(root, path, index=0, gate=False):
+def get_node_path(root, path, index=0, gate=False):
 	# path = /key1/key2/key6
 
 	test_path = []
-	print(index," **** ",path," *** ",root)
 	if root is None and index < len(path):
 		gate = True
-		cur, gate = search_node(root, path, index+1, gate)
+		cur, gate = get_node_path(root, path, index+1, gate)
 		test_path.append(path[index])
 		test_path = test_path + cur
 		return test_path, gate
 
 	# solution 1: The case is complete path.
 	elif index == len(path):
-	#elif root is None and index == len(path):
 		return [None], gate
 	
-	print("# ",path[index])
 	# solution 2: The case is incomplete path.
 	if "{" in path[index] and "}" in path[index]:
-		print("1 ",root.key)
-		cur, gate = search_node(root.tail, path, index+1, gate)
+		cur, gate = get_node_path(root.tail, path, index+1, gate)
 		test_path.append(root.key)
 		test_path = test_path + cur
 		return test_path, gate
 
 	if path[index] == root.key:
-		print("2 ",root.key)
-		cur, gate = search_node(root.tail, path, index+1, gate)
+		cur, gate = get_node_path(root.tail, path, index+1, gate)
 		test_path.append(root.key)
 		test_path = test_path + cur
 	else:
-		print("3 ",root.key)
-		cur, gate = search_node(root.right, path, index, gate)
+		cur, gate = get_node_path(root.right, path, index, gate)
 		test_path = test_path + cur
 
 	return test_path, gate
@@ -79,6 +73,19 @@ def show_all_node(root):
 	
 	return ""
 
+def search_node(root, path):
+	path_len = len(path)
+	if root.key == path[0]:
+		if path_len == 1:
+			return root.data
+		else:
+			data = search_node(root.tail, path[1:])
+			return data
+	else:
+		data = search_node(root.right, path)
+		return data
+		
+	
 ##########################
 # key1
 #  |
