@@ -1,15 +1,14 @@
 # Product library
+
 import re, sys, os
 import argparse
 import threading
-
 import ssl
 import logging
 from http.server import HTTPServer
 
 # Setting
 from setting import *
-
 from CLI import CLI_setup
 
 # Private library
@@ -30,32 +29,6 @@ logger.addHandler(ch)
 # ssl (For target future needs to implement the secret function)
 context = ssl.create_default_context()
 
-def init():
-        logger.info("Redfish Mockup Server, version {}".format(TOOL_VERSION))
-
-        parser = argparse.ArgumentParser(description='Serve a static Redfish mockup.')
-        parser.add_argument('-H', '--host', '--Host', default=HOST,
-                            help='hostname or IP address (default 127.0.0.1)')
-        parser.add_argument('-p', '--port', '--Port', default=int(SERVER_PORT), type=int,
-                            help='host port (default 8000)')
-        parser.add_argument('-D', '--dir', '--Dir',
-                            help='path to mockup dir (may be relative to CWD)')
-        parser.add_argument('-X', '--headers', action='store_true',
-                            help='load headers from headers.json files in mockup')
-        parser.add_argument('-t', '--time', default=0,
-                            help='delay in seconds added to responses (float or int)')
-        parser.add_argument('-T', action='store_true',
-                            help='delay response based on times in time.json files in mockup')
-        parser.add_argument('-s', '--ssl', action='store_true',
-                            help='place server in SSL (HTTPS) mode; requires a cert and key')
-        parser.add_argument('--cert', help='the certificate for SSL')
-        parser.add_argument('--key', help='the key for SSL')
-        parser.add_argument('-S', '--short-form', '--shortForm', action='store_true', help='apply short form to mockup (omit filepath /redfish/v1)')
-       	parser.add_argument('-P', '--ssdp', action='store_true',
-                            help='make mockup SSDP discoverable')
-
-        return parser.parse_args()
-
 def set_server(args, root, response):
 
         hostname = args.host
@@ -73,7 +46,7 @@ def set_server(args, root, response):
         # check if mockup path was specified.  If not, use the built-in mockup
         if mockDirPath is None:
             print("Add the default path.")
-            #mockDirPath = 'public-rackmount1'
+            mockDirPath = 'public-rackmount1'
             shortForm = True
 
         logger.info('Hostname: {}'.format(hostname))
@@ -86,6 +59,7 @@ def set_server(args, root, response):
         logger.info("Serving Mockup in absolute path: {}".format(mockDir))
 
         logger.info("ShortForm: {}".format(shortForm))
+
         verify_mockdir_is_exist(logger, mockDir, shortForm)
 
         myServer = HTTPServer((hostname, port), RfMockupServer)
@@ -151,5 +125,3 @@ if __name__ == "__main__":
 	myserver = set_server(init(), root)
 	run_server(myserver)
 	
-	print("666666666666666666666")
-

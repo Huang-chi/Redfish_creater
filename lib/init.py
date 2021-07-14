@@ -49,22 +49,22 @@ def analysis_xml(path):
 		
 	return response
 
-def install_resource(response, attr):
-	if 'child' in response[attr].keys():
-		uri = response[attr]['parent']['Uri']
+def install_resource(response):
+	if 'parent' in response.keys():
+		uri = response['parent']['Uri']
 		print("Install uri: ", uri)
 		filename = uri.split("/")[-1]
 		urllib.request.urlretrieve(uri,"./resource/"+filename)
 		
-	uri = response[attr]['Uri']	
+	uri = response['Uri']	
 	print("Install uri: ", uri)
 	filename = uri.split("/")[-1]
 	urllib.request.urlretrieve(uri,"./resource/"+filename)
 
-def setup_install_resource():
+def setup_install_resource(responses):
 	uri_info = get_json_info(RESOURCE_URI_PATH)
-	for attr in uri_info.values():
-		install_resource(responses, attr)
+	for response in responses.values():
+		install_resource(response)
 
 def create_collections(root):	
 	print("Create collection ... \n")
@@ -82,7 +82,7 @@ def get_resource_uri(install_resource_gate):
 		print("### Responses: ", responses)
 	
 	if install_resource_gate:
-		setup_install_resource()
+		setup_install_resource(responses)
 	return responses
 
 def create_define_entity(root):
@@ -93,6 +93,7 @@ def create_define_entity(root):
 		print("### Entities: ", entities)
 	
 	for entity in entities.keys():
+		print(entities[entity][1:])
 		_key = entities[entity].split("/")[-1]
 		symbol = _key
 		root = add_new_node(root, Rf.RedfishNode(_key, symbol, uri = entities[entity][1:]))
@@ -114,6 +115,7 @@ def create_data_entity(root, domain, responses):
 			for _type in responses.keys():
 				# Remove the last of the word (Remove 's') and find related type.
 				match_resource_or_not = (_type.find(symbols[index][:-1]) != -1)
+				
 				if match_resource_or_not:
 					
 					redfish_architecture = responses[_type]

@@ -270,7 +270,8 @@ class RedfishNode:
 	def get_reference_property(self, child):
 		temp_info = {}
 		attr_name = child.attrib["Name"]
-		
+	
+		#print(child.attrib["Type"])	
 		if "Oem" == attr_name:
 			temp = ""
 		elif "Edm" == child.attrib["Type"].split(".")[0]:

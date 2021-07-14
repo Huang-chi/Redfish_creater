@@ -46,16 +46,14 @@ class RfMockupServer(BaseHTTPRequestHandler):
         def get_cached_link(self, path):
             """get_cached_link
             :param path:
-            """ 
+            """
+ 
             path = os.path.join("redfish_data",path.split("1/")[-1])
+            print("root = ", self.server.root)
+            print("\n path = ", path)
             jsonData = search_node(self.server.root, path.split("/"))
             print("# jsonData = ", jsonData)
-            '''
-            if path not in self.patchedLinks:
-                jsonData = get_json_info(path)
-            else:
-                jsonData = self.patchedLinks[path]
-            '''
+
             return jsonData is not None and jsonData != '404', jsonData
 
         def try_to_sleep(self, method, path):
